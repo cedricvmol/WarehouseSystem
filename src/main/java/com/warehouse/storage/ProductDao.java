@@ -91,7 +91,6 @@ public class ProductDao {
         try(PreparedStatement ps = connection.prepareStatement("DELETE FROM products WHERE productId = ?"))
         {
             ps.setInt(1,productId);
-
             ps.executeUpdate();
         }
     }
