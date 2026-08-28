@@ -38,6 +38,10 @@ public class WarehouseService {
         supplierDao.insert(supplier);
     }
 
+    public void addStockItem(StockItem stockItem) throws SQLException{
+        stockItemDao.insert(stockItem);
+    }
+
     public int checkStockLevel(int productId) throws SQLException{
         List<StockItem> stockItemForProductId = stockItemDao.findByProduct(productId);
         int stockLevel = 0;
