@@ -23,12 +23,7 @@ public class WarehouseService {
     }
 
     public void addProduct(int productId,String name, int threshold,int supplierId) throws SQLException {
-
         Supplier supplier = findSupplier(supplierId);
-
-        if(supplier == null) {
-            throw new IllegalArgumentException("No supplier found with id: " + supplierId + ".");
-        }
         Product product = new Product(productId,name,threshold,supplier);
         productDao.insert(product);
     }
@@ -51,13 +46,6 @@ public class WarehouseService {
     public void addStockItem(int productId,int binId,int quantity) throws SQLException{
         Product product = findProduct(productId);
         Bin bin = findBin(binId);
-
-        if(product == null){
-            throw new IllegalArgumentException("No product found with id: " + productId + ".");
-        }
-        if(bin == null){
-            throw new IllegalArgumentException("No bin found with id: " + binId + ".");
-        }
         StockItem stockItem = new StockItem(product,bin,quantity);
         stockItemDao.insert(stockItem);
     }
@@ -75,10 +63,7 @@ public class WarehouseService {
     }
 
     public int checkStockLevel(int productId) throws SQLException{
-        Product product = findProduct(productId);
-        if(product == null) {
-            throw new IllegalArgumentException("No product found with id: " + productId + ".");
-        }
+        findProduct(productId);
         List<StockItem> stockItemForProductId = stockItemDao.findByProduct(productId);
         int stockLevel = 0;
 
