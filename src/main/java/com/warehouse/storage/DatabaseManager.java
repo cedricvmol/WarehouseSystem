@@ -45,8 +45,10 @@ public class DatabaseManager {
                     "email TEXT NOT NULL)");
 
             stmt.execute("CREATE TABLE IF NOT EXISTS stockItems (" +
-                    "productId INTEGER NOT NULL , binId INTEGER NOT NULL , PRIMARY KEY(productId,binId)," +
                     "quantity INTEGER NOT NULL," +
+                    "productId INTEGER NOT NULL," +
+                    "binId INTEGER NOT NULL," +
+                    "PRIMARY KEY(productId,binId),"+
                     "FOREIGN KEY (productId) REFERENCES products (productId)," +
                     "FOREIGN KEY (binId) REFERENCES bins (binId))");
         }

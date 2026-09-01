@@ -22,27 +22,63 @@ public class WarehouseService {
         this.stockItemDao = stockItemDao;
     }
 
-    public void addProduct(Product product) throws SQLException {
+    public void addProduct(int productId,String name, int threshold,int supplierId) throws SQLException {
+
+        Supplier supplier = findSupplier(supplierId);
+
+        if(supplier == null) {
+            throw new IllegalArgumentException("No supplier found with id: " + supplierId + ".");
+        }
+        Product product = new Product(productId,name,threshold,supplier);
         productDao.insert(product);
     }
 
-    public void addBin(Bin bin) throws SQLException{
+    public void addBin(int binId,String locationCode) throws SQLException{
+        Bin bin = new Bin(binId,locationCode);
         binDao.insert(bin);
     }
 
-    public void addCustomer(Customer customer) throws SQLException{
+    public void addCustomer(int id,String name,String email) throws SQLException{
+        Customer customer = new Customer(id,name,email);
         customerDao.insert(customer);
     }
 
-    public void addSupplier(Supplier supplier) throws SQLException{
+    public void addSupplier(int id,String name,String email) throws SQLException{
+        Supplier supplier = new Supplier(id,name,email);
         supplierDao.insert(supplier);
     }
 
-    public void addStockItem(StockItem stockItem) throws SQLException{
+    public void addStockItem(int productId,int binId,int quantity) throws SQLException{
+        Product product = findProduct(productId);
+        Bin bin = findBin(binId);
+
+        if(product == null){
+            throw new IllegalArgumentException("No product found with id: " + productId + ".");
+        }
+        if(bin == null){
+            throw new IllegalArgumentException("No bin found with id: " + binId + ".");
+        }
+        StockItem stockItem = new StockItem(product,bin,quantity);
         stockItemDao.insert(stockItem);
     }
 
+    public Product findProduct(int productId) throws SQLException {
+        return productDao.findById(productId);
+    }
+
+    public Bin findBin(int binId) throws SQLException{
+        return binDao.findById(binId);
+    }
+
+    public Supplier findSupplier(int supplierId) throws SQLException{
+        return supplierDao.findById(supplierId);
+    }
+
     public int checkStockLevel(int productId) throws SQLException{
+        Product product = findProduct(productId);
+        if(product == null) {
+            throw new IllegalArgumentException("No product found with id: " + productId + ".");
+        }
         List<StockItem> stockItemForProductId = stockItemDao.findByProduct(productId);
         int stockLevel = 0;
 
