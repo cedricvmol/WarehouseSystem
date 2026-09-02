@@ -7,7 +7,7 @@ import java.util.List;
 
 public interface Repository<T,ID>{
 
-    void insert(T item) throws SQLException;
+    ID insert(T item) throws SQLException;
     T findById(ID id) throws SQLException;
     List<T> findAll() throws SQLException;
     void update(T item) throws SQLException;
