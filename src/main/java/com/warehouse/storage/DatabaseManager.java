@@ -51,6 +51,36 @@ public class DatabaseManager {
                     "PRIMARY KEY(productId,binId),"+
                     "FOREIGN KEY (productId) REFERENCES products (productId)," +
                     "FOREIGN KEY (binId) REFERENCES bins (binId))");
+
+            stmt.execute("CREATE TABLE IF NOT EXISTS purchaseOrders (" +
+                    "purchaseOrderId INTEGER PRIMARY KEY AUTOINCREMENT," +
+                    "supplierId INTEGER NOT NULL," +
+                    "orderDate TEXT NOT NULL," +
+                    "orderStatus TEXT NOT NULL," +
+                    "FOREIGN KEY (supplierId) REFERENCES suppliers(supplierId))");
+
+            stmt.execute("CREATE TABLE IF NOT EXISTS purchaseOrderLineItems (" +
+                    "purchaseOrderId INTEGER NOT NULL," +
+                    "productId INTEGER NOT NULL," +
+                    "quantity INTEGER NOT NULL," +
+                    "PRIMARY KEY (productId, purchaseOrderId)," +
+                    "FOREIGN KEY (productId) REFERENCES products (productId)," +
+                    "FOREIGN KEY (purchaseOrderId) REFERENCES purchaseOrders(purchaseOrderId))");
+
+            stmt.execute("CREATE TABLE IF NOT EXISTS salesOrders(" +
+                    "salesOrderId INTEGER PRIMARY KEY AUTOINCREMENT," +
+                    "customerId INTEGER NOT NULL," +
+                    "orderDate TEXT NOT NULL," +
+                    "orderStatus TEXT NOT NULL," +
+                    "FOREIGN KEY (customerId) REFERENCES customers (customerId))");
+
+            stmt.execute("CREATE TABLE IF NOT EXISTS salesOrderLineItems (" +
+                    "salesOrderId INTEGER NOT NULL," +
+                    "productId INTEGER NOT NULL," +
+                    "quantity INTEGER NOT NULL," +
+                    "PRIMARY KEY (productId,salesOrderId)," +
+                    "FOREIGN KEY (productId) REFERENCES products (productId)," +
+                    "FOREIGN KEY (salesOrderId) REFERENCES salesOrders (salesOrderId))");
         }
     }
 
