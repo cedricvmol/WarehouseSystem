@@ -61,6 +61,8 @@ public class WarehouseUI {
                 scanner.nextLine();
             } catch (SQLException e){
                 System.out.println("Something went wrong in the storage layer.");
+            } catch (IllegalStateException e){
+                System.out.println(e.getMessage());
             }
 
         }

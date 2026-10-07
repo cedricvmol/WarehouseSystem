@@ -38,4 +38,11 @@ public class SalesOrder {
     public List<SalesOrderLineItem> getSalesOrderLineItems() {
         return salesOrderLineItems;
     }
+
+    public void cancel(){
+        if(this.orderStatus != OrderStatus.OPEN){
+            throw new IllegalStateException("Order is already canceled or already completed.");
+        }
+        this.orderStatus = OrderStatus.CANCELLED;
+    }
 }

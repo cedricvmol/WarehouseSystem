@@ -40,4 +40,10 @@ public class PurchaseOrder {
         return purchaseOrderLineItems;
     }
 
+    public void cancel(){
+        if(this.orderStatus != OrderStatus.OPEN){
+            throw new IllegalStateException("Order is already canceled or already completed.");
+        }
+        this.orderStatus = OrderStatus.CANCELLED;
+    }
 }
