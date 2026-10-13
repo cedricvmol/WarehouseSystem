@@ -49,6 +49,11 @@ ticket summaries in English, matching the existing codebase and Jira board.
 
 - Layered CLI app: `domain` → `service` (`WarehouseService` facade) →
   `storage` (one DAO per entity, SQLite via JDBC) → `ui` (`WarehouseUI`).
+- **`docs/test-strategy.md` is the source of truth for the test approach**
+  (layers, tools, database rules, pipeline, open decisions). Read it at the
+  start of every session. When a test decision is confirmed, record it there
+  (section "Beslist", tick it off under "Open beslissingen") — not in this
+  file. `docs/testing.md` holds the commands and report locations.
 - Read `docs/project-overview.md`, `docs/domain-model.md`,
   `docs/domein-uitleg.md` and the current `docs/iteration-N-plan.md` for
   scope and use cases before designing tests.
@@ -94,7 +99,13 @@ Not yet decided — confirm with the user before treating any as standard:
 
 ## Decisions log
 
-Record confirmed decisions here (date — decision — reason).
+Record confirmed decisions about **this skill's role and behaviour** here
+(date — decision — reason). Decisions about the test approach itself go in
+`docs/test-strategy.md`.
+
+- 2026-10-13 — Test strategy lives in `docs/test-strategy.md`, the skill only
+  references it: it's project knowledge the student reads and versions too;
+  the skill describes how the QA partner behaves. Avoids two copies drifting.
 
 - 2026-10-13 — Separate QA skill created; java-tutor stays purely for
   learning Java — testing is the user's profession and deserves its own role.

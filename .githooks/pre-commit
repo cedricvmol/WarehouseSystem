@@ -1,0 +1,15 @@
+#!/bin/sh
+# Runs the unit tests before every commit; a red test blocks the commit.
+# Activate once per clone: git config core.hooksPath .githooks
+# Bypass in an emergency: git commit --no-verify
+
+echo "pre-commit: running unit tests..."
+
+if ! ./mvnw -q test; then
+    echo ""
+    echo "pre-commit: tests failed - commit rejected."
+    echo "Details: target/surefire-reports/ or run '.\mvnw test' yourself."
+    exit 1
+fi
+
+echo "pre-commit: all tests green."

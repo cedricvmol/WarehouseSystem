@@ -10,6 +10,16 @@ Commando's hieronder zijn voor PowerShell (ook de IntelliJ-terminal).
 In Git Bash of Linux: `./mvnw` in plaats van `.\mvnw`.
 Zet `-D...`-opties in PowerShell tussen aanhalingstekens.
 
+## Pre-commit hook
+
+Bij elke `git commit` draaien eerst de tests (`.githooks/pre-commit`, ±7 s).
+Eén rode test → commit geweigerd. Werkt ook bij committen vanuit IntelliJ.
+
+| Commando | Wat het doet |
+|---|---|
+| `git config core.hooksPath .githooks` | Hook activeren — eenmalig per clone (lokaal al gedaan) |
+| `git commit --no-verify` | Hook overslaan — alleen in noodgevallen |
+
 ## Eén klik in IntelliJ
 
 Run-configuratie **Test + Dashboard** (dropdown rechtsboven, naast ▶).
@@ -59,4 +69,19 @@ het op "loading" hangen. Gebruik `allure:serve`.
 ## Waar staan de tests
 
 - `src/test/java/com/warehouse/domain/` — unit tests domeinlaag (geen database).
+- `src/test/java/com/warehouse/service/` — unit tests `WarehouseService` met Mockito-mocks van de DAO's (geen database).
+- Alle unit tests hebben `@Tag("unit")`.
 - Allure-indeling: `@Epic` → `@Feature` → `@Story` (tab *Behaviors* in het dashboard).
+
+## Specificatietests (`@Disabled("KAN-XX")`)
+
+Tests voor werk dat nog niet gebouwd is staan al klaar, maar uitgeschakeld.
+Ze verschijnen als **Skipped** in Allure (reden = ticketnummer), blokkeren je
+commit niet, en de `@Issue`-link in Allure opent het Jira-ticket.
+
+Werkwijze per ticket: verwijder de `@Disabled` van de tests van dat
+ticket/criterium → rood → implementeer → groen → commit.
+
+| Commando | Wat het doet |
+|---|---|
+| `.\mvnw test "-Djunit.jupiter.conditions.deactivate=org.junit.*DisabledCondition"` | Draait óók alle uitgeschakelde tests — toont hoeveel werk er nog open staat |
