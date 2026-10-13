@@ -36,3 +36,6 @@ bin/
 
 ### Runtime data ###
 *.db
+
+### Allure CLI download ###
+.allure/
