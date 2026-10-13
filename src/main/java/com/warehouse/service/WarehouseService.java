@@ -4,8 +4,6 @@ import com.warehouse.domain.*;
 import com.warehouse.storage.*;
 
 import java.sql.SQLException;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -86,8 +84,7 @@ public class WarehouseService {
         return stockLevel;
     }
 
-    public int createPurchaseOrder(int supplierId, String orderDate, String orderStatus, Map<Integer , Integer> lineItems) throws SQLException {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+    public int createPurchaseOrder(int supplierId, Map<Integer,Integer> lineItems) throws SQLException {
         List<PurchaseOrderLineItem> purchaseOrderLineItems = new ArrayList<>();
 
         for(Map.Entry<Integer,Integer> item : lineItems.entrySet())
@@ -98,15 +95,11 @@ public class WarehouseService {
         }
 
         Supplier supplier = findSupplier(supplierId);
-        LocalDateTime date = LocalDateTime.parse(orderDate,formatter);
-        OrderStatus order = OrderStatus.valueOf(orderStatus);
-
-        PurchaseOrder purchaseOrder = new PurchaseOrder(0,supplier,date,order,purchaseOrderLineItems);
+        PurchaseOrder purchaseOrder = new PurchaseOrder(supplier,purchaseOrderLineItems);
         return purchaseOrderDao.insert(purchaseOrder);
     }
 
-    public int createSalesOrder(int customerId,String orderDate,String orderStatus,Map<Integer,Integer> lineItems) throws SQLException{
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+    public int createSalesOrder(int customerId,Map<Integer,Integer> lineItems) throws SQLException{
         List<SalesOrderLineItem> salesOrderLineItems = new ArrayList<>();
 
         for(Map.Entry<Integer,Integer> item : lineItems.entrySet()){
@@ -116,10 +109,7 @@ public class WarehouseService {
         }
 
         Customer customer = findCustomer(customerId);
-        LocalDateTime date = LocalDateTime.parse(orderDate,formatter);
-        OrderStatus order = OrderStatus.valueOf(orderStatus);
-
-        SalesOrder salesOrder = new SalesOrder(0,customer,date,order,salesOrderLineItems);
+        SalesOrder salesOrder = new SalesOrder(customer,salesOrderLineItems);
         return salesOrderDao.insert(salesOrder);
     }
 

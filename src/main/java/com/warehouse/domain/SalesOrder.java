@@ -12,12 +12,18 @@ public class SalesOrder {
     private List<SalesOrderLineItem> salesOrderLineItems;
 
     public SalesOrder(int salesOrderId, Customer customer, LocalDateTime orderDate, OrderStatus orderStatus, List<SalesOrderLineItem> salesOrderLineItems) {
+        if(salesOrderLineItems == null || salesOrderLineItems.isEmpty()) throw new IllegalArgumentException("There are no line items in your sales order.");
         this.salesOrderId = salesOrderId;
         this.customer = customer;
         this.orderDate = orderDate;
         this.orderStatus = orderStatus;
         this.salesOrderLineItems = salesOrderLineItems;
     }
+
+     public SalesOrder(Customer customer,List<SalesOrderLineItem> salesOrderLineItems){
+        this(0,customer,LocalDateTime.now(),OrderStatus.OPEN,salesOrderLineItems);
+     }
+
 
     public int getSalesOrderId() {
         return salesOrderId;

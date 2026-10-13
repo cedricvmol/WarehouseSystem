@@ -12,11 +12,16 @@ public class PurchaseOrder {
     private List<PurchaseOrderLineItem> purchaseOrderLineItems;
 
     public PurchaseOrder(int purchaseOrderId,Supplier supplier,LocalDateTime orderDate,OrderStatus orderStatus,List<PurchaseOrderLineItem> purchaseOrderLineItems){
+        if(purchaseOrderLineItems == null || purchaseOrderLineItems.isEmpty()) throw new IllegalArgumentException("There are no line items in your purchase order.");
         this.purchaseOrderId = purchaseOrderId;
         this.supplier = supplier;
         this.orderDate = orderDate;
         this.orderStatus = orderStatus;
         this.purchaseOrderLineItems = purchaseOrderLineItems;
+    }
+
+    public PurchaseOrder(Supplier supplier, List<PurchaseOrderLineItem> purchaseOrderLineItems){
+        this(0,supplier,LocalDateTime.now(),OrderStatus.OPEN,purchaseOrderLineItems);
     }
 
 
