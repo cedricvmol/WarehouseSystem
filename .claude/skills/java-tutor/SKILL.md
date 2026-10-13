@@ -52,22 +52,18 @@ throughout the project lifecycle. Always ask for confirmation before creating
 or transitioning tickets.
 
 ### During Design (Phase 2)
-After the iteration plan is agreed upon, create tickets:
-1. **Epic** for the project (e.g. "Library Catalog App")
-2. **Story** per iteration (e.g. "Iteration 1 — Core Domain & Basic CRUD"),
-   linked to the epic as parent
-3. **Tasks** per story for individual pieces of work within that iteration
-   (e.g. "Create Book domain class", "Implement BookService with add/remove")
-   Keep task descriptions short and actionable — a sentence or two, not a spec.
-   All tickets start in Backlog.
+After the iteration plan is agreed upon, create tickets following the
+hierarchy and rules in the second **Jira Integration** section below
+(Epic per project, Story per use case with acceptance criteria, Taak for
+technical work, label per iteration). All tickets start in Backlog.
 
 ### During Implementation (Phase 3)
-- When the student starts working on a task, transition it to In Progress
-- When a task is complete and reviewed, transition it to Done
-- When all tasks in a story are done, transition the story to Done
-- Add comments to tasks for notable decisions or learnings if relevant
+- When the student starts working on a story or task, transition it to In Progress
+- When it is complete and reviewed, transition it to Done
+- A story is only Done when all its acceptance criteria are met
+- Add comments for notable decisions or learnings if relevant
 ### During Wrap-Up (Phase 4)
-- Verify all tasks and stories are in Done
+- Verify all stories and tasks with the iteration label are in Done
 - Transition the epic to Done
 - The board should be clean before starting a new project
 - Generate or update iteration docs (see Documentation section)
@@ -205,34 +201,49 @@ raw config strings → constants or config files.
 When starting a new iteration, create Jira issues to track the work. Use the
 Atlassian MCP tools (prefixed `mcp__...__`) to interact with Jira.
 
-### Hierarchy
+### Hierarchy (from Iteration 3 of WarehouseSystem onward)
 ```
-Epic  (1 per project)   — the overall project
-  └── Story (1 per iteration) — each iteration is a user story
-        └── Subtask (1 per task) — individual work items under the story
+Epic  (1 per project)          — the overall project
+  ├── Story (1 per use case)   — user-facing behaviour, WITH acceptance criteria
+  └── Taak  (technical work)   — no direct user effect, no acceptance criteria
+        (Subtaak only if a story/task is genuinely too big — optional)
+Iteration = label `iteration-N` on every story and task
 ```
+Iteration 1–2 of WarehouseSystem still use the old structure (Story per
+iteration, Subtaak per task) — leave those as they are, don't migrate.
 
 ### Rules
 - **Epic**: create once per project, at project kickoff.
-- **Story**: one per iteration. Summary format: `Iteration N – <Theme>`.
-  Parent must be the project Epic.
-- **Subtask**: use `issueTypeName: "Subtaak"` and always set `parent` to the
-  Story key in the same call. Never create tasks as "Taak" under a Story —
-  they cannot be converted to Subtasks via the API after creation.
-- Create the Story first, then create all its Subtasks (parent key is needed).
+- **Story**: one per use case from the iteration plan (e.g. "Receive purchase
+  order"). Parent = project Epic. Label `iteration-N`. Must contain
+  acceptance criteria (see below).
+- **Taak**: technical work without a user-facing outcome (schema change,
+  generic interface, refactor). Parent = project Epic. Label `iteration-N`.
+  Name the specific file and method/feature; keep the description short and
+  actionable (what to implement, key constraints).
+- **Subtaak**: optional, only to split a large story. Use
+  `issueTypeName: "Subtaak"` with `parent` set in the same call — subtasks
+  cannot change type via the API afterwards.
 
-### Subtask content
-Each subtask summary should name the specific file and method/feature.
-Keep descriptions short and actionable: what to implement and any key
-constraints (e.g. default value, guard condition).
+### Acceptance criteria
+Every Story gets an "Acceptance criteria" heading in its description, written
+as Given/When/Then — one criterion per scenario, covering the happy path and
+the relevant negative/boundary cases. Example for "Cancel order":
+- Given an order with status OPEN, When I cancel it, Then its status is CANCELLED
+- Given an order with status CANCELLED or COMPLETED, When I cancel it, Then I
+  get an error message and the status is unchanged
+
+Draft the criteria together with the student during Phase 2 — propose, let
+them adjust. The criteria are the basis for test cases in the `/qa` skill
+(Testiny), so keep them concrete and testable.
 
 ### Commit messages
-Always prefix commit messages with the Jira issue key of the subtask being worked on.
+Always prefix commit messages with the Jira issue key of the story or task being worked on.
 Format: `KAN-XX: <short description>`
 Example: `KAN-7: Add loanPeriodDays field to Book class`
 
 This lets Jira automatically link the commit to the ticket once the GitHub for Jira
-app is connected. If a commit spans multiple subtasks, list all keys: `KAN-8 KAN-9: ...`
+app is connected. If a commit spans multiple tickets, list all keys: `KAN-8 KAN-9: ...`
 
 ---
 
