@@ -64,6 +64,9 @@ Zelfde concept als pytest met fixtures:
 - Elke test: lege DB → schema via `initTables()` → eigen testdata → actie →
   assert op returnwaarde **en** via SQL op de tabellen.
 - Negatieve cases op DB-niveau (bv. order met onbestaande klant → geweigerd).
+- Locatie: `src/test/java/com/warehouse/storage/`, `@Tag("integration")`.
+  Fixture `TestDatabase`: per test een vers bestand in `target/test-db/`
+  (blijft staan voor inspectie met SQL/DBeaver).
 
 ### E2E
 
@@ -139,7 +142,7 @@ Voorstel: pas een agent maken wanneer een laag bestaat en herhaalwerk heeft.
 
 ## Open beslissingen
 
-- [ ] Hoe wordt de DB-URL doorgegeven (constructor-parameter, systeemproperty, config-bestand)?
+- [x] Hoe wordt de DB-URL doorgegeven (constructor-parameter, systeemproperty, config-bestand)? → zie Beslist 2026-10-14
 - [ ] E2E in JUnit (Java) of black-box in een andere taal (bv. pytest)?
 - [ ] Structuur in Testiny (mappen, naamgeving, link naar KAN)
 - [ ] Agents per laag: ja/nee, en wanneer
@@ -169,3 +172,9 @@ Voorstel: pas een agent maken wanneer een laag bestaat en herhaalwerk heeft.
   (rode) specificatietests met `@Disabled("KAN-XX")` en `@Issue("KAN-XX")`;
   de student verwijdert `@Disabled` en implementeert tot groen. Grenswaarden
   die *toegelaten* moeten zijn, draaien meteen mee.
+- 2026-10-14 — DB-URL via constructor: `DatabaseManager(String url)` voor
+  tests; `DatabaseManager()` blijft `warehouse.db` gebruiken (productie
+  ongewijzigd). Voor E2E later een systeemproperty (bv.
+  `-Dwarehouse.db.url=...`) in `WarehouseApp` bovenop die constructor.
+  Productiewerk: KAN-90 (URL) en KAN-91 (`PRAGMA foreign_keys = ON`);
+  integratietests staan klaar als `@Disabled`-specs.

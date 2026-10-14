@@ -71,6 +71,7 @@ het op "loading" hangen. Gebruik `allure:serve`.
 - `src/test/java/com/warehouse/domain/` — unit tests domeinlaag (geen database).
 - `src/test/java/com/warehouse/service/` — unit tests `WarehouseService` met Mockito-mocks van de DAO's (geen database).
 - Alle unit tests hebben `@Tag("unit")`.
+- `src/test/java/com/warehouse/storage/` — integratietests DAO's tegen een echte SQLite-database, `@Tag("integration")`. Elke test krijgt een eigen bestand in `target/test-db/<testnaam>.db` (fixture `TestDatabase`); dat bestand blijft na de run staan, zodat je het met SQL of DBeaver kunt nakijken. Nooit tegen `warehouse.db`.
 - Allure-indeling: `@Epic` → `@Feature` → `@Story` (tab *Behaviors* in het dashboard).
 
 ## Specificatietests (`@Disabled("KAN-XX")`)
@@ -85,3 +86,13 @@ ticket/criterium → rood → implementeer → groen → commit.
 | Commando | Wat het doet |
 |---|---|
 | `.\mvnw test "-Djunit.jupiter.conditions.deactivate=org.junit.*DisabledCondition"` | Draait óók alle uitgeschakelde tests — toont hoeveel werk er nog open staat |
+
+## Integratietests
+
+| Commando | Wat het doet |
+|---|---|
+| `.\mvnw test "-Dgroups=integration"` | Alleen de integratietests |
+| `.\mvnw test "-Dgroups=unit"` | Alleen de unit tests |
+
+Test-DB's openen: `target/test-db/*.db` in DBeaver (driver SQLite).
+`.\mvnw clean` gooit ze weg.
