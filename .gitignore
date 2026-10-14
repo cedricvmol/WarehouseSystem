@@ -39,3 +39,6 @@ bin/
 
 ### Allure CLI download ###
 .allure/
+
+# Local Claude Code hooks (tool-generated)
+.claude/hooks/
