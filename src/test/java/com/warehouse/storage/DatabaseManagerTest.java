@@ -48,7 +48,6 @@ class DatabaseManagerTest {
     }
 
     @Test
-    @Disabled("KAN-90")
     @DisplayName("initTables() creates the database file at the given URL")
     void createsFileAtGivenUrl(TestInfo info) throws Exception {
         db = TestDatabase.fresh(info.getTestMethod().orElseThrow().getName());
@@ -57,7 +56,6 @@ class DatabaseManagerTest {
     }
 
     @Test
-    @Disabled("KAN-90")
     @DisplayName("initTables() creates all tables in the given database")
     void createsAllTables(TestInfo info) throws Exception {
         db = TestDatabase.fresh(info.getTestMethod().orElseThrow().getName());
@@ -69,7 +67,6 @@ class DatabaseManagerTest {
     }
 
     @Test
-    @Disabled("KAN-90")
     @DisplayName("The real warehouse.db is not created or modified")
     void doesNotTouchProductionDatabase(TestInfo info) throws Exception {
         db = TestDatabase.fresh(info.getTestMethod().orElseThrow().getName());
@@ -84,7 +81,6 @@ class DatabaseManagerTest {
     }
 
     @Test
-    @Disabled("KAN-90")
     @DisplayName("Two databases with different URLs are independent")
     void databasesAreIsolated(TestInfo info) throws Exception {
         String name = info.getTestMethod().orElseThrow().getName();

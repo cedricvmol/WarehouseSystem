@@ -66,7 +66,6 @@ class SalesOrderDaoTest {
     }
 
     @Test
-    @Disabled("KAN-90")
     @DisplayName("insert stores the order header as OPEN for the customer")
     void insertStoresHeader() throws Exception {
         int id = insertOrder();
@@ -77,7 +76,6 @@ class SalesOrderDaoTest {
     }
 
     @Test
-    @Disabled("KAN-90")
     @DisplayName("insert stores every line item with its quantity")
     void insertStoresLineItems() throws Exception {
         int id = insertOrder();
@@ -90,7 +88,6 @@ class SalesOrderDaoTest {
     }
 
     @Test
-    @Disabled("KAN-90")
     @DisplayName("insert generates a new id per order")
     void insertGeneratesIds() throws Exception {
         int first = insertOrder();
@@ -101,7 +98,6 @@ class SalesOrderDaoTest {
     }
 
     @Test
-    @Disabled("KAN-90")
     @DisplayName("findById returns what was stored")
     void findByIdRoundTrip() throws Exception {
         int id = insertOrder();
@@ -115,7 +111,6 @@ class SalesOrderDaoTest {
     }
 
     @Test
-    @Disabled("KAN-90")
     @DisplayName("update after cancel stores status CANCELLED and keeps the line items")
     void updateCancelled() throws Exception {
         int id = insertOrder();
@@ -129,7 +124,6 @@ class SalesOrderDaoTest {
     }
 
     @Test
-    @Disabled("KAN-90")
     @DisplayName("delete removes the header and its line items")
     void deleteRemovesEverything() throws Exception {
         int id = insertOrder();

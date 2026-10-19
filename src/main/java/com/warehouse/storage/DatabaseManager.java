@@ -8,12 +8,19 @@ import java.sql.Statement;
 
 public class DatabaseManager {
 
-    private final String CONNECTION_URL = "jdbc:sqlite:warehouse.db";
+    private static final String DEFAULT_URL = "jdbc:sqlite:warehouse.db";
     private Connection connection;
 
-    public DatabaseManager() throws SQLException {
-        connection = DriverManager.getConnection(CONNECTION_URL);
+
+    public DatabaseManager(String url) throws SQLException {
+        connection = DriverManager.getConnection(url);
     }
+
+    public DatabaseManager() throws SQLException {
+        this(DEFAULT_URL);
+    }
+
+
 
     public Connection getConnection(){
         return connection;
