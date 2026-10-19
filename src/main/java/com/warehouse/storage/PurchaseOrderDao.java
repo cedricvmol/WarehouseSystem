@@ -25,6 +25,7 @@ public class PurchaseOrderDao implements Repository<PurchaseOrder,Integer>{
 
     @Override
     public Integer insert(PurchaseOrder item) throws SQLException {
+        connection.setAutoCommit(false);
         try(PreparedStatement ps = connection.prepareStatement("INSERT INTO purchaseOrders (" +
                 "supplierId,orderDate,orderStatus) VALUES  (?,?,?)",PreparedStatement.RETURN_GENERATED_KEYS)
             )
@@ -32,9 +33,7 @@ public class PurchaseOrderDao implements Repository<PurchaseOrder,Integer>{
             ps.setInt(1,item.getSupplier().getSupplierId());
             ps.setString(2,item.getOrderDate().format(formatter));
             ps.setString(3,item.getOrderStatus().toString());
-
             ps.executeUpdate();
-
             try(ResultSet keys = ps.getGeneratedKeys())
             {
                 if(keys.next()){
@@ -49,10 +48,15 @@ public class PurchaseOrderDao implements Repository<PurchaseOrder,Integer>{
                             psItems.executeUpdate();
                         }
                     }
+                    connection.commit();
                     return newId;
                 }
             }
-
+        }catch (Exception e){
+            connection.rollback();
+            throw e;
+        }finally {
+            connection.setAutoCommit(true);
         }
         throw new IllegalArgumentException("No row was detected.");
     }

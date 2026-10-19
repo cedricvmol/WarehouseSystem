@@ -28,6 +28,7 @@ public class SalesOrderDao implements Repository<SalesOrder,Integer>{
 
     @Override
     public Integer insert(SalesOrder item) throws SQLException {
+        connection.setAutoCommit(false);
         try(PreparedStatement ps = connection.prepareStatement("INSERT INTO salesOrders (customerId,orderDate,orderStatus) VALUES  (?,?,?)",PreparedStatement.RETURN_GENERATED_KEYS))
         {
             ps.setInt(1,item.getCustomer().getCustomerId());
@@ -51,9 +52,15 @@ public class SalesOrderDao implements Repository<SalesOrder,Integer>{
                             psLineItem.executeUpdate();
                         }
                     }
+                    connection.commit();
                     return newId;
                 }
             }
+        }catch (Exception e) {
+            connection.rollback();
+            throw e;
+        }finally {
+            connection.setAutoCommit(true);
         }
         throw new IllegalArgumentException("No row was detected");
     }

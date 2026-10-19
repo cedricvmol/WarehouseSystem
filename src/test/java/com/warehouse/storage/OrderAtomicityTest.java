@@ -63,7 +63,6 @@ class OrderAtomicityTest {
     }
 
     @Test
-    @Disabled("KAN-92")
     @DisplayName("sales order: failing line item → no header and no line items stored")
     void salesOrderRolledBack() throws Exception {
         SalesOrder order = new SalesOrder(customer, List.of(
@@ -77,7 +76,6 @@ class OrderAtomicityTest {
     }
 
     @Test
-    @Disabled("KAN-92")
     @DisplayName("purchase order: failing line item → no header and no line items stored")
     void purchaseOrderRolledBack() throws Exception {
         PurchaseOrder order = new PurchaseOrder(supplier, List.of(
@@ -91,7 +89,6 @@ class OrderAtomicityTest {
     }
 
     @Test
-    @Disabled("KAN-92")
     @DisplayName("after a failed insert the next valid order is still stored normally")
     void connectionUsableAfterFailure() throws Exception {
         SalesOrder bad = new SalesOrder(customer, List.of(new SalesOrderLineItem(unknownProduct, 1)));
