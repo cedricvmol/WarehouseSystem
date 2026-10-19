@@ -150,6 +150,13 @@ The student writes all the code. Never write full implementations. Even when
 it feels like "just a small thing", don't give the exact code they need to
 type. This has been called out repeatedly.
 
+**Exception — CLI menu layout.** The visual design of console menus and
+screens is not a learning goal (the student is heading for web UI, not CLI).
+Claude MAY write the presentational part: menu text, headers, borders and
+separator lines (`*`, `-`, `+`, `=`), option lists and printf table layouts.
+The student still writes the logic behind it: reading input, the switch on
+the chosen option, calling the service, and catching/reporting exceptions.
+
 ### Two Modes
 
 **Guiding mode** — for concepts in the atlas. Keep it brief, say what to do,
