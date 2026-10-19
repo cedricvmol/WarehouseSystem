@@ -1,8 +1,6 @@
 package com.warehouse.storage;
 
 import java.io.IOException;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.Connection;
@@ -28,7 +26,7 @@ final class TestDatabase implements AutoCloseable {
     private TestDatabase(Path file) throws SQLException {
         this.file = file;
         this.url = "jdbc:sqlite:" + file.toString().replace('\\', '/');
-        this.databaseManager = newDatabaseManager(url);
+        this.databaseManager = new DatabaseManager(url);
         this.databaseManager.initTables();
         this.connection = databaseManager.getConnection();
     }
@@ -39,27 +37,6 @@ final class TestDatabase implements AutoCloseable {
         Path file = DIR.resolve(name.replaceAll("[^A-Za-z0-9_-]", "_") + ".db");
         Files.deleteIfExists(file);
         return new TestDatabase(file);
-    }
-
-    /**
-     * KAN-90: {@code DatabaseManager(String url)} does not exist yet. Called via
-     * reflection so this test code compiles today; replace with
-     * {@code new DatabaseManager(url)} once KAN-90 is done.
-     */
-    static DatabaseManager newDatabaseManager(String url) throws SQLException {
-        try {
-            Constructor<DatabaseManager> constructor = DatabaseManager.class.getConstructor(String.class);
-            return constructor.newInstance(url);
-        } catch (NoSuchMethodException e) {
-            throw new IllegalStateException("KAN-90: DatabaseManager(String url) is not implemented yet", e);
-        } catch (InvocationTargetException e) {
-            if (e.getCause() instanceof SQLException sqlException) {
-                throw sqlException;
-            }
-            throw new IllegalStateException(e.getCause());
-        } catch (ReflectiveOperationException e) {
-            throw new IllegalStateException(e);
-        }
     }
 
     /** Runs a statement directly on the database, bypassing the DAOs. */
