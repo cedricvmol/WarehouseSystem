@@ -150,53 +150,63 @@ public class SalesOrderDao implements Repository<SalesOrder,Integer>{
 
     @Override
     public void update(SalesOrder item) throws SQLException {
-        try(PreparedStatement ps = connection.prepareStatement("UPDATE salesOrders SET customerId = ?,orderDate = ?,orderStatus = ? WHERE salesOrderId = ?"))
-        {
-            ps.setInt(1,item.getCustomer().getCustomerId());
-            ps.setString(2,item.getOrderDate().format(formatter));
-            ps.setString(3,item.getOrderStatus().toString());
-            ps.setInt(4,item.getSalesOrderId());
-
-            ps.executeUpdate();
-        }
-
-        try(PreparedStatement ps = connection.prepareStatement("DELETE FROM salesOrderLineItems WHERE salesOrderId = ?"))
-        {
-            ps.setInt(1,item.getSalesOrderId());
-
-            ps.executeUpdate();
-        }
-
-        for(SalesOrderLineItem salesOrderLineItem : item.getSalesOrderLineItems())
-        {
-            try(PreparedStatement ps = connection.prepareStatement("INSERT INTO salesOrderLineItems (salesOrderId,productId,quantity) VALUES (?,?,?)"))
+        connection.setAutoCommit(false);
+        try{
+            try(PreparedStatement ps = connection.prepareStatement("UPDATE salesOrders SET customerId = ?,orderDate = ?,orderStatus = ? WHERE salesOrderId = ?"))
             {
-                ps.setInt(1,item.getSalesOrderId());
-                ps.setInt(2,salesOrderLineItem.getProduct().getProductId());
-                ps.setInt(3,salesOrderLineItem.getQuantity());
-
+                ps.setInt(1,item.getCustomer().getCustomerId());
+                ps.setString(2,item.getOrderDate().format(formatter));
+                ps.setString(3,item.getOrderStatus().toString());
+                ps.setInt(4,item.getSalesOrderId());
                 ps.executeUpdate();
             }
-        }
 
+            try(PreparedStatement ps = connection.prepareStatement("DELETE FROM salesOrderLineItems WHERE salesOrderId = ?"))
+            {
+                ps.setInt(1,item.getSalesOrderId());
+                ps.executeUpdate();
+            }
+
+            for(SalesOrderLineItem salesOrderLineItem : item.getSalesOrderLineItems())
+            {
+                try(PreparedStatement ps = connection.prepareStatement("INSERT INTO salesOrderLineItems (salesOrderId,productId,quantity) VALUES (?,?,?)"))
+                {
+                    ps.setInt(1,item.getSalesOrderId());
+                    ps.setInt(2,salesOrderLineItem.getProduct().getProductId());
+                    ps.setInt(3,salesOrderLineItem.getQuantity());
+                    ps.executeUpdate();
+                }
+            }
+            connection.commit();
+        }catch (Exception e){
+            connection.rollback();
+            throw e;
+        }finally {
+            connection.setAutoCommit(true);
+        }
     }
 
     @Override
     public void delete(Integer integer) throws SQLException {
+        connection.setAutoCommit(false);
+        try{
+            try(PreparedStatement ps = connection.prepareStatement("DELETE FROM salesOrderLineItems WHERE salesOrderId = ?"))
+            {
+                ps.setInt(1,integer);
+                ps.executeUpdate();
+            }
 
-        try(PreparedStatement ps = connection.prepareStatement("DELETE FROM salesOrderLineItems WHERE salesOrderId = ?"))
-        {
-            ps.setInt(1,integer);
-
-            ps.executeUpdate();
+            try(PreparedStatement ps = connection.prepareStatement("DELETE FROM salesOrders WHERE salesOrderId = ?"))
+            {
+                ps.setInt(1,integer);
+                ps.executeUpdate();
+            }
+            connection.commit();
+        } catch (Exception e){
+            connection.rollback();
+            throw e;
+        }finally {
+            connection.setAutoCommit(true);
         }
-
-        try(PreparedStatement ps = connection.prepareStatement("DELETE FROM salesOrders WHERE salesOrderId = ?"))
-        {
-            ps.setInt(1,integer);
-
-            ps.executeUpdate();
-        }
-
     }
 }

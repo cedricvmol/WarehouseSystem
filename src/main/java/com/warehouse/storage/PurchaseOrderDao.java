@@ -71,12 +71,9 @@ public class PurchaseOrderDao implements Repository<PurchaseOrder,Integer>{
                 if(rs.next()){
                     int supplierId = rs.getInt("supplierId");
                     Supplier supplier = supplierDao.findById(supplierId);
-
                     String orderDate = rs.getString("orderDate");
                     LocalDateTime date = LocalDateTime.parse(orderDate, formatter);
-
                     String orderStatus = rs.getString("orderStatus");
-
                     List<PurchaseOrderLineItem> purchaseOrderLineItems = new ArrayList<>();
                     try(PreparedStatement psLineItem = connection.prepareStatement("SELECT * FROM purchaseOrderLineItems WHERE purchaseOrderId = ?"))
                     {
@@ -143,50 +140,60 @@ public class PurchaseOrderDao implements Repository<PurchaseOrder,Integer>{
 
     @Override
     public void update(PurchaseOrder item) throws SQLException {
-
-        try(PreparedStatement ps = connection.prepareStatement("UPDATE purchaseOrders SET supplierId = ? , orderDate = ? , orderStatus = ? WHERE purchaseOrderId = ?"))
-        {
-            ps.setInt(1,item.getSupplier().getSupplierId());
-            ps.setString(2,item.getOrderDate().format(formatter));
-            ps.setString(3,item.getOrderStatus().toString());
-            ps.setInt(4,item.getPurchaseOrderId());
-
-            ps.executeUpdate();
-        }
-
-        try(PreparedStatement ps = connection.prepareStatement("DELETE FROM purchaseOrderLineItems WHERE purchaseOrderId = ?"))
-        {
-            ps.setInt(1,item.getPurchaseOrderId());
-
-            ps.executeUpdate();
-        }
-        for(PurchaseOrderLineItem items : item.getPurchaseOrderLineItems()){
-            try(PreparedStatement psItems = connection.prepareStatement("INSERT INTO purchaseOrderLineItems(purchaseOrderId,productId,quantity) VALUES (?,?,?) "))
+        connection.setAutoCommit(false);
+        try{
+            try(PreparedStatement ps = connection.prepareStatement("UPDATE purchaseOrders SET supplierId = ? , orderDate = ? , orderStatus = ? WHERE purchaseOrderId = ?"))
             {
-                psItems.setInt(1,item.getPurchaseOrderId());
-                psItems.setInt(2,items.getProduct().getProductId());
-                psItems.setInt(3,items.getQuantity());
-                psItems.executeUpdate();
+                ps.setInt(1,item.getSupplier().getSupplierId());
+                ps.setString(2,item.getOrderDate().format(formatter));
+                ps.setString(3,item.getOrderStatus().toString());
+                ps.setInt(4,item.getPurchaseOrderId());
+                ps.executeUpdate();
             }
+
+            try(PreparedStatement ps = connection.prepareStatement("DELETE FROM purchaseOrderLineItems WHERE purchaseOrderId = ?"))
+            {
+                ps.setInt(1,item.getPurchaseOrderId());
+                ps.executeUpdate();
+            }
+            for(PurchaseOrderLineItem items : item.getPurchaseOrderLineItems()){
+                try(PreparedStatement psItems = connection.prepareStatement("INSERT INTO purchaseOrderLineItems(purchaseOrderId,productId,quantity) VALUES (?,?,?) "))
+                {
+                    psItems.setInt(1,item.getPurchaseOrderId());
+                    psItems.setInt(2,items.getProduct().getProductId());
+                    psItems.setInt(3,items.getQuantity());
+                    psItems.executeUpdate();
+                }
+            }
+            connection.commit();
+        }catch (Exception e){
+            connection.rollback();
+            throw e;
+        }finally {
+            connection.setAutoCommit(true);
         }
     }
 
     @Override
     public void delete(Integer integer) throws SQLException {
-
-        try(PreparedStatement ps = connection.prepareStatement("DELETE FROM purchaseOrderLineItems WHERE purchaseOrderId = ?"))
-        {
-            ps.setInt(1,integer);
-
-            ps.executeUpdate();
+        connection.setAutoCommit(false);
+        try{
+            try(PreparedStatement ps = connection.prepareStatement("DELETE FROM purchaseOrderLineItems WHERE purchaseOrderId = ?"))
+            {
+                ps.setInt(1,integer);
+                ps.executeUpdate();
+            }
+            try(PreparedStatement ps = connection.prepareStatement("DELETE FROM purchaseOrders WHERE purchaseOrderId = ?"))
+            {
+                ps.setInt(1,integer);
+                ps.executeUpdate();
+            }
+            connection.commit();
+        }catch (Exception e){
+            connection.rollback();
+            throw e;
+        }finally {
+            connection.setAutoCommit(true);
         }
-
-        try(PreparedStatement ps = connection.prepareStatement("DELETE FROM purchaseOrders WHERE purchaseOrderId = ?"))
-        {
-            ps.setInt(1,integer);
-
-            ps.executeUpdate();
-        }
-
     }
 }
