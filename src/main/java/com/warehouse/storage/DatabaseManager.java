@@ -14,6 +14,10 @@ public class DatabaseManager {
 
     public DatabaseManager(String url) throws SQLException {
         connection = DriverManager.getConnection(url);
+
+        try(Statement stmt = this.connection.createStatement();){
+            stmt.execute("PRAGMA foreign_keys = ON");
+        }
     }
 
     public DatabaseManager() throws SQLException {

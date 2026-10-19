@@ -81,7 +81,6 @@ class ForeignKeyTest {
     }
 
     @Test
-    @Disabled("KAN-91")
     @DisplayName("PRAGMA foreign_keys is ON for the connection")
     void pragmaIsOn() throws Exception {
         assertEquals(1, db.queryInt("PRAGMA foreign_keys"));
@@ -92,7 +91,6 @@ class ForeignKeyTest {
     class InsertWithUnknownParent {
 
         @Test
-        @Disabled("KAN-91")
         @DisplayName("product → unknown supplier")
         void productWithUnknownSupplier() throws Exception {
             Product orphan = new Product(2, "Orphan", 5, unknownSupplier);
@@ -102,7 +100,6 @@ class ForeignKeyTest {
         }
 
         @Test
-        @Disabled("KAN-91")
         @DisplayName("stock item → unknown product")
         void stockItemWithUnknownProduct() throws Exception {
             assertThrows(SQLException.class, () -> stockItemDao.insert(new StockItem(unknownProduct, bin, 10)));
@@ -110,7 +107,6 @@ class ForeignKeyTest {
         }
 
         @Test
-        @Disabled("KAN-91")
         @DisplayName("stock item → unknown bin")
         void stockItemWithUnknownBin() throws Exception {
             assertThrows(SQLException.class, () -> stockItemDao.insert(new StockItem(product, unknownBin, 10)));
@@ -118,7 +114,6 @@ class ForeignKeyTest {
         }
 
         @Test
-        @Disabled("KAN-91")
         @DisplayName("sales order → unknown customer")
         void salesOrderWithUnknownCustomer() throws Exception {
             SalesOrder order = new SalesOrder(unknownCustomer, List.of(new SalesOrderLineItem(product, 1)));
@@ -128,7 +123,6 @@ class ForeignKeyTest {
         }
 
         @Test
-        @Disabled("KAN-91")
         @DisplayName("purchase order → unknown supplier")
         void purchaseOrderWithUnknownSupplier() throws Exception {
             PurchaseOrder order = new PurchaseOrder(unknownSupplier, List.of(new PurchaseOrderLineItem(product, 1)));
@@ -138,7 +132,6 @@ class ForeignKeyTest {
         }
 
         @Test
-        @Disabled("KAN-91")
         @DisplayName("sales order line item → unknown product")
         void salesOrderLineWithUnknownProduct() throws Exception {
             SalesOrder order = new SalesOrder(customer, List.of(new SalesOrderLineItem(unknownProduct, 1)));
@@ -148,7 +141,6 @@ class ForeignKeyTest {
         }
 
         @Test
-        @Disabled("KAN-91")
         @DisplayName("purchase order line item → unknown product")
         void purchaseOrderLineWithUnknownProduct() throws Exception {
             PurchaseOrder order = new PurchaseOrder(supplier, List.of(new PurchaseOrderLineItem(unknownProduct, 1)));
@@ -163,7 +155,6 @@ class ForeignKeyTest {
     class DeleteReferencedParent {
 
         @Test
-        @Disabled("KAN-91")
         @DisplayName("supplier with products")
         void supplierWithProducts() throws Exception {
             assertThrows(SQLException.class, () -> supplierDao.delete(supplier.getSupplierId()));
@@ -171,7 +162,6 @@ class ForeignKeyTest {
         }
 
         @Test
-        @Disabled("KAN-91")
         @DisplayName("product with stock")
         void productWithStock() throws Exception {
             stockItemDao.insert(new StockItem(product, bin, 10));
@@ -181,7 +171,6 @@ class ForeignKeyTest {
         }
 
         @Test
-        @Disabled("KAN-91")
         @DisplayName("bin with stock")
         void binWithStock() throws Exception {
             stockItemDao.insert(new StockItem(product, bin, 10));
@@ -191,7 +180,6 @@ class ForeignKeyTest {
         }
 
         @Test
-        @Disabled("KAN-91")
         @DisplayName("customer with sales orders")
         void customerWithOrders() throws Exception {
             salesOrderDao.insert(new SalesOrder(customer, List.of(new SalesOrderLineItem(product, 1))));
