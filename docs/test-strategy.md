@@ -84,8 +84,44 @@ blijft dezelfde.
 
 ### Manueel
 
-- Testcases en runs in Testiny, gelinkt aan KAN-stories.
+- Testcases en runs in Testiny (project `P-1` WareHouseProject), gelinkt
+  aan KAN-stories. Testiny is gekoppeld met Jira: gelinkte testcases en
+  runs zijn zichtbaar op de Jira-issue.
 - Uitvoeren tegen een aparte test-DB, nooit tegen `warehouse.db`.
+
+#### Structuur in Testiny
+
+Mappen volgen het **domein**, niet de iteratie (functionaliteit blijft,
+iteraties passeren). Max. 2 niveaus; een map pas aanmaken als er cases in
+komen.
+
+```
+01 Master data          → Products, Suppliers, Customers, Bins
+02 Orders               → Purchase orders, Sales orders
+03 Fulfillment & stock
+04 Alerts & reporting
+90 Cross-cutting        → Input validation, CLI navigation, Persistence
+```
+
+Testcases:
+- Titel `[KAN-XX] <gedrag in gewone taal>`, bv.
+  `[KAN-85] Create purchase order with one line item`.
+- Minstens één case per acceptatiecriterium; AC-nummer in de precondition
+  ("Covers KAN-85 AC2").
+- Template STEPS: Given → precondition, When → stappen, Then → verwacht
+  resultaat.
+- `testcase_type`: Acceptance (uit AC), Usability (exploratief), Regression
+  (set die elke iteratie opnieuw draait).
+- `priority`: Critical = happy path kernflow, Medium = negatieve paden,
+  Low = cosmetisch.
+- Jira-link: de student zet die zelf in de Testiny-UI (de connector kan
+  geen links leggen). De key in de titel is aanvullend.
+
+Testruns:
+- Per iteratie: `Iteration N – Acceptance`, gelinkt aan de testtaak in Jira.
+- Later: `Regression – <datum/versie>` met de Regression-cases.
+- Later te bekijken: JUnit-XML importeren in Testiny zodat ook
+  automatische resultaten in Testiny/Jira verschijnen.
 
 ## Database-afspraken (van bij de start)
 
@@ -144,7 +180,7 @@ Voorstel: pas een agent maken wanneer een laag bestaat en herhaalwerk heeft.
 
 - [x] Hoe wordt de DB-URL doorgegeven (constructor-parameter, systeemproperty, config-bestand)? → zie Beslist 2026-10-14
 - [ ] E2E in JUnit (Java) of black-box in een andere taal (bv. pytest)?
-- [ ] Structuur in Testiny (mappen, naamgeving, link naar KAN)
+- [x] Structuur in Testiny (mappen, naamgeving, link naar KAN) → zie Beslist 2026-11-02
 - [ ] Agents per laag: ja/nee, en wanneer
 - [ ] BDD (Cucumber/Gherkin) voor E2E-scenario's?
 - [ ] Bugs uit testen loggen als Jira-issue: werkwijze
@@ -178,3 +214,11 @@ Voorstel: pas een agent maken wanneer een laag bestaat en herhaalwerk heeft.
   `-Dwarehouse.db.url=...`) in `WarehouseApp` bovenop die constructor.
   Productiewerk: KAN-90 (URL) en KAN-91 (`PRAGMA foreign_keys = ON`);
   integratietests staan klaar als `@Disabled`-specs.
+- 2026-11-02 — Structuur in Testiny: mappen per domein (niet per
+  iteratie), titel `[KAN-XX] ...`, minstens één case per AC, STEPS-template,
+  runs per iteratie. Jira-links zet de student zelf in de UI; key in de
+  titel is aanvullend. Details: sectie Manueel → Structuur in Testiny.
+- 2026-11-02 — Uitzondering iteratie 2 (oude structuur met subtaken): alle
+  order-testcases (TC-1 … TC-18) hangen aan subtaak KAN-86; de
+  validatiecases TC-19 en TC-20 aan story KAN-87. Vanaf iteratie 3
+  hangen testcases aan de user story waarvan ze een AC dekken.

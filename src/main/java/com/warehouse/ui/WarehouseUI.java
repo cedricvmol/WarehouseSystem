@@ -71,6 +71,15 @@ public class WarehouseUI {
                     case "7" : createPurchaseOrder();
                         break;
 
+                    case "8" : cancelPurchaseOrder();
+                        break;
+
+                    case "9" : createSalesOrder();
+                        break;
+
+                    case "10" : cancelSalesOrder();
+                        break;
+
                     case "0" : return;
                     default:
                         System.out.println("  ✘ Invalid option, try again.");
@@ -217,7 +226,6 @@ public class WarehouseUI {
             System.out.print("  Choice:         ");
             int choice = scanner.nextInt();
             scanner.nextLine();
-
             int totalAmount = lineItems.getOrDefault(productId,0) + quantity;
             lineItems.put(productId,totalAmount);
 
@@ -227,5 +235,65 @@ public class WarehouseUI {
         }
         int orderId = warehouseService.createPurchaseOrder(supplierId,lineItems);
         System.out.println("  ✔ Purchase order #" + orderId + " created.");
+    }
+
+    public void createSalesOrder() throws SQLException {
+        Map<Integer,Integer> lineItems = new HashMap<>();
+
+        System.out.println("\n  ── CREATE SALES ORDER ────────────");
+        System.out.print("  Customer ID:    ");
+        int customerId = scanner.nextInt();
+        scanner.nextLine();
+
+        while(true){
+            System.out.println("\n  ·· Line item ·····················");
+
+            System.out.print("  Product ID:     ");
+            int productId = scanner.nextInt();
+            scanner.nextLine();
+
+            System.out.print("  Quantity:       ");
+            int quantity = scanner.nextInt();
+            scanner.nextLine();
+
+            System.out.println("  ──────────────────────────────────");
+            System.out.println("  [1]  Add another product");
+            System.out.println("  [2]  Save order");
+
+            System.out.print("  Choice:         ");
+            int choice = scanner.nextInt();
+            scanner.nextLine();
+            int totalAmount = lineItems.getOrDefault(productId,0) + quantity;
+            lineItems.put(productId,totalAmount);
+
+            if(choice == 2){
+                break;
+            }
+        }
+        int orderId = warehouseService.createSalesOrder(customerId,lineItems);
+        System.out.println("  ✔ Sales order #" + orderId + " created.");
+    }
+
+
+    public void cancelPurchaseOrder() throws SQLException{
+        System.out.println("\n  ── CANCEL PURCHASE ORDER ─────────");
+
+        System.out.print("  Order ID:       ");
+        int orderId = scanner.nextInt();
+        scanner.nextLine();
+
+        warehouseService.cancelPurchaseOrder(orderId);
+        System.out.println("  ✔ Purchase order #" + orderId + " cancelled.");
+    }
+
+    public void cancelSalesOrder() throws SQLException{
+        System.out.println("\n  ── CANCEL SALES ORDER ────────────");
+
+        System.out.print("  Order ID:       ");
+        int orderId = scanner.nextInt();
+        scanner.nextLine();
+
+        warehouseService.cancelSalesOrder(orderId);
+        System.out.println("  ✔ Sales order #" + orderId + " cancelled.");
     }
 }
