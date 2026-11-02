@@ -367,6 +367,16 @@ use guiding mode, not teaching mode.
 - DELETE-before-INSERT save strategy
 - Loading order respecting FK dependencies
 - Swapping storage backends behind the service layer
+- JDBC transactions — `setAutoCommit(false)`, `commit()`, `rollback()` in catch,
+  restore auto-commit in finally (WarehouseSystem iteration 2)
+- `RETURN_GENERATED_KEYS` + `getGeneratedKeys()` for DB-generated IDs
+  (`INTEGER PRIMARY KEY AUTOINCREMENT`)
+- `PRAGMA foreign_keys = ON` — SQLite doesn't enforce FKs by default
+### Generics
+- Generic interface with two type parameters: `Repository<T, ID>`
+- Implementing a generic interface with concrete types
+  (`PurchaseOrderDao implements Repository<PurchaseOrder, Integer>`)
+- Not yet: generic methods, bounded types (`<T extends …>`), wildcards
 ### Completed Projects
 
 **BankApp** — Banking / financial accounts. Complete (9 iterations).

@@ -36,7 +36,7 @@ adjust stock
 | # | Theme | New Concept(s) | Status |
 |---|-------|----------------|--------|
 | 1 | Core Domain & Master Data | — (reinforcement: OOP, service layer, SQLite/JDBC) | Done |
-| 2 | Orders & Line Items | Generics (generic `Repository<T, ID>` DAO base) | Not started |
-| 3 | Fulfillment & Stock Movement | Strategy pattern (bin-picking strategy for shipping) | Not started |
+| 2 | Orders & Line Items | Generics (generic `Repository<T, ID>` DAO base) | Done |
+| 3 | Fulfillment & Stock Movement | Strategy pattern (bin-picking strategy for shipping) | In progress |
 | 4 | Low-Stock Alerts & Reporting | Observer pattern (reorder-threshold notifications) | Not started |
 | 5 | Polish & Refactor | Logging (SLF4J/Logback), Configuration (properties file) | Not started |
