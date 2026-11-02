@@ -8,9 +8,10 @@
 
 ## Doel
 
-- Elke merge draait automatisch door een pipeline met unit-, integratie- en
-  E2E-tests.
-- Manuele tests (Testiny) vullen aan waar automatisatie niet loont.
+- Elke merge draait automatisch door een pipeline met unit- en
+  integratietests (incl. UI-tests met gemockte service).
+- End-to-end testen gebeurt **manueel** (Testiny) zolang de app een CLI is.
+  Komt er een web-UI, dan worden E2E-tests geautomatiseerd met Playwright.
 - Resultaten zijn controleerbaar met SQL op de database, zoals in de praktijk.
 - Elke acceptatiecriterium van een story (KAN-XX) is traceerbaar naar minstens
   één test.
@@ -33,13 +34,13 @@ De app is gelaagd: `domain` → `service` (`WarehouseService`) → `storage`
 
 | Laag | Wat wordt getest | Database | Tool | Draait |
 |---|---|---|---|---|
-| **Unit** | Domeinregels (statussen, validatie, berekeningen), service-logica met fakes | Geen | JUnit 5 | Elke build |
+| **Unit** | Domeinregels (statussen, validatie, berekeningen), service-logica met mocks, CLI-bedrading met gemockte service (invoer, menu-routering, meldingen) | Geen | JUnit 5 + Mockito | Elke build |
 | **Integratie** | DAO's en services samen met een echte database | Eigen SQLite-bestand per test | JUnit 5 + SQL-asserts | Elke build |
-| **E2E** | Volledige app via de CLI, als gebruiker | Eigen test-DB per scenario | JUnit 5, app als proces (stdin/stdout) | Elke merge |
-| **Manueel** | Exploratief, gebruiksvriendelijkheid, wat niet automatiseerbaar loont | Test-DB, te openen in DBeaver | Testiny | Per iteratie |
+| **E2E (manueel)** | Volledige app via de CLI, als gebruiker: acceptatie per iteratie, regressie (Critical-cases), exploratief | `warehouse.db` met seed, te openen in DBeaver | Testiny | Per iteratie |
+| **E2E (automatisch)** | *Uitgesteld* — pas bij een web-UI | Eigen test-DB per scenario | Playwright for Java | Elke merge |
 
-Verdeling: veel unit, minder integratie, weinig maar waardevolle E2E
-(testpiramide).
+Verdeling: veel unit, minder integratie, end-to-end manueel (testpiramide;
+de top wordt pas geautomatiseerd als er een web-UI is).
 
 ### Unit
 
@@ -70,24 +71,37 @@ Zelfde concept als pytest met fixtures:
 
 ### E2E
 
-Playwright/Selenium sturen een browser aan; deze app heeft een CLI. E2E is
-hetzelfde idee met een ander "scherm":
+**Zolang de app een CLI is: manueel.** E2E-scenario's zijn de manuele
+testcases in Testiny (zie Manueel), afgeleid van de Given/When/Then van de
+stories en gecontroleerd met SQL op `warehouse.db`.
 
-1. Start de app als proces (`java -jar ...`) met een test-DB.
-2. Stuur invoer naar stdin (menukeuzes, waarden).
-3. Controleer de console-output.
-4. Controleer de eindtoestand met SQL op de test-DB.
+Waarom geen automatische CLI-E2E (app als proces, stdin/stdout, SQL)? Dat
+zou exact hetzelfde doen als de manuele run. De automatische UI-tests
+dekken de CLI-bedrading al (met gemockte service), de onderste lagen
+vangen de meeste regressies op; manueel blijft wat end-to-end waarde
+heeft.
 
-Scenario's komen rechtstreeks uit de Given/When/Then van de stories.
-Komt er later een web-UI, dan wordt de driver Playwright for Java — de laag
-blijft dezelfde.
+**Komt er een web-UI:** dan worden E2E-tests geautomatiseerd met
+**Playwright for Java**, tegen een eigen test-DB per scenario
+(systeemproperty `-Dwarehouse.db.url=...`, zie Beslist 2026-10-14), en
+draaien ze in de pipeline. Scenario's blijven uit de Given/When/Then van de
+stories komen.
 
 ### Manueel
 
 - Testcases en runs in Testiny (project `P-1` WareHouseProject), gelinkt
   aan KAN-stories. Testiny is gekoppeld met Jira: gelinkte testcases en
   runs zijn zichtbaar op de Jira-issue.
-- Uitvoeren tegen een aparte test-DB, nooit tegen `warehouse.db`.
+- Uitvoeren tegen `warehouse.db`, met de data die er al in zit. Geen
+  nieuwe DB per run: bestaande data is realistischer en vaak handig voor
+  exploratief testen. Resultaten nakijken met SQL (DBeaver).
+- Automatische tests (unit, integratie, later Playwright-E2E) gebruiken wél altijd een eigen
+  DB en raken `warehouse.db` nooit.
+- `warehouse.db` staat niet in git (`*.db` in `.gitignore`): elke machine
+  heeft een eigen DB. Gedeelde basisdata komt uit
+  `src/test/resources/manual-test-data.sql` (seed, `INSERT OR IGNORE`,
+  veilig herhaalbaar, met controlequeries onderaan). Testcases steunen
+  alleen op de seed en op wat ze zelf aanmaken.
 
 #### Structuur in Testiny
 
@@ -158,8 +172,10 @@ Bij elke merge (GitHub Actions):
 
 1. Build + unit-tests
 2. Integratietests
-3. E2E-tests
-4. Allure- en JaCoCo-rapport publiceren
+3. Allure- en JaCoCo-rapport publiceren
+
+Bij een web-UI komt er een stap bij: E2E-tests met Playwright (na de
+integratietests).
 
 Uitvoering is altijd deterministisch via Maven — geen interpretatie in
 pass/fail.
@@ -171,7 +187,7 @@ uit** (dat doet Maven/CI).
 
 - Unit-agent — domeinregels, grenswaarden
 - Integratie-agent — DAO/service met SQL-asserts
-- E2E-agent — CLI-scenario's uit Given/When/Then
+- E2E-agent — Playwright-scenario's uit Given/When/Then (pas bij een web-UI)
 - Triage-agent — bij rode pipeline: bug, testfout of flaky?
 
 Voorstel: pas een agent maken wanneer een laag bestaat en herhaalwerk heeft.
@@ -179,7 +195,7 @@ Voorstel: pas een agent maken wanneer een laag bestaat en herhaalwerk heeft.
 ## Open beslissingen
 
 - [x] Hoe wordt de DB-URL doorgegeven (constructor-parameter, systeemproperty, config-bestand)? → zie Beslist 2026-10-14
-- [ ] E2E in JUnit (Java) of black-box in een andere taal (bv. pytest)?
+- [x] E2E in JUnit (Java) of black-box in een andere taal (bv. pytest)? → zie Beslist 2026-11-02 (manueel zolang CLI; Playwright bij web-UI)
 - [x] Structuur in Testiny (mappen, naamgeving, link naar KAN) → zie Beslist 2026-11-02
 - [ ] Agents per laag: ja/nee, en wanneer
 - [ ] BDD (Cucumber/Gherkin) voor E2E-scenario's?
@@ -222,3 +238,11 @@ Voorstel: pas een agent maken wanneer een laag bestaat en herhaalwerk heeft.
   order-testcases (TC-1 … TC-18) hangen aan subtaak KAN-86; de
   validatiecases TC-19 en TC-20 aan story KAN-87. Vanaf iteratie 3
   hangen testcases aan de user story waarvan ze een AC dekken.
+- 2026-11-02 — Manuele tests draaien tegen `warehouse.db` met bestaande
+  data, geen aparte DB per run (realistischer, handig voor exploratief
+  testen). Automatische tests blijven een eigen DB gebruiken.
+- 2026-11-02 — E2E blijft **manueel** (Testiny) zolang de app een CLI is;
+  geen automatische CLI-E2E (zou de manuele run verdubbelen). UI-tests met
+  gemockte service blijven automatisch (bedrading, invoer, meldingen).
+  Komt er een web-UI, dan E2E automatisch met Playwright for Java in de
+  pipeline.

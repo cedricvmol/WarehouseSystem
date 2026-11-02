@@ -79,21 +79,31 @@ ticket summaries in English, matching the existing codebase and Jira board.
 - Always ask for confirmation before creating or transitioning tickets.
 
 ### Testiny (connector)
-- The user already knows Testiny. The connector may need authenticating
-  first (`authenticate` / `complete_authentication`).
+- The user already knows Testiny. Project **`P-1` WareHouseProject**. If
+  only `authenticate` tools show up, ask the user to run `/mcp` and select
+  "claude.ai Testiny".
 - Allowed: create and update test cases, test runs and results — **always
   confirm before writing**, same as Jira.
-- Structure (folders, naming, link to KAN tickets) is an open decision.
+- Structure (folders, naming, link to KAN) is decided — see "Structuur in
+  Testiny" in `docs/test-strategy.md`.
+- The connector **cannot set Jira links**; the user adds them in the
+  Testiny UI. Testiny is connected to Jira, so linked cases/runs show on the
+  issue.
+- Manual tests run against `warehouse.db` with the seed
+  `src/test/resources/manual-test-data.sql`; check column names against
+  `DatabaseManager.initTables()` before writing SQL steps.
 
 ## Candidate responsibilities (to be fine-tuned)
 
-Decided: automated JUnit 5 tests (domain + service) and test reporting
-(Allure, JaCoCo, later CI) — see Decisions log.
+Decided — see Decisions log:
+- Automated JUnit 5 tests (domain, service, storage, UI with mocks) and test
+  reporting (Allure, JaCoCo, later CI)
+- Designing test cases from use cases / acceptance criteria (incl.
+  boundary/negative cases), with a SQL check as the last expected result
+- Managing test cases and runs in Testiny (always confirm before writing)
 
 Not yet decided — confirm with the user before treating any as standard:
 - Test strategy per iteration (what to test at which level)
-- Designing test cases from use cases (incl. boundary/negative cases)
-- Managing test cases and runs in Testiny (e.g. KAN-86 manual test pass)
 - BDD scenarios (Cucumber/Gherkin)
 - Logging bugs found during testing as Jira issues
 
@@ -119,10 +129,25 @@ Record confirmed decisions about **this skill's role and behaviour** here
 - 2026-10-13 — Decided: this skill writes automated JUnit 5 tests and owns
   test reporting. Allure (dashboard, `@Epic/@Feature/@Story`, later
   `@Link("KAN-XX")`) and JaCoCo (coverage) are in `pom.xml`. Run locally with
-  JDK 21+ (`~/.jdks/openjdk-26`) and IntelliJ's bundled Maven.
+  JDK 21+ (now `~/.jdks/openjdk-27.0.1.0.3`; check `ls ~/.jdks` if it
+  moved) via the Maven Wrapper (`./mvnw`).
 - 2026-10-13 — Long-term goal: a CI pipeline on every merge, with unit tests,
   automated E2E tests and possibly manual test cases (Testiny). The user wants
   to verify results with SQL on the database, as they do at work.
+  *Superseded on 2026-11-02, see below.*
+- 2026-11-02 — E2E stays **manual** (Testiny) as long as the app is a CLI:
+  don't write automated CLI E2E tests (app as process, stdin/stdout) — they
+  would duplicate the manual run, and the user enjoys manual testing.
+  Automated: unit + integration, incl. UI tests with a mocked service
+  (wiring, input handling, messages). When a web UI arrives, E2E is
+  automated with Playwright for Java in the pipeline. Details in
+  `docs/test-strategy.md`.
+- 2026-11-02 — Decided: this skill designs test cases from use cases /
+  acceptance criteria and manages test cases and runs in Testiny (with
+  confirmation before writing). First done for the Iteration 2 manual pass
+  (TC-1 … TC-20).
+- 2026-11-02 — Testiny structure decided (folders per domain, titles
+  `[KAN-XX] ...`, STEPS template); details in `docs/test-strategy.md`.
 - 2026-10-13 — Test database direction (proposed, not final): make the DB URL
   configurable in `DatabaseManager` (student's task, production code) so
   tests use their own SQLite file that can be inspected with SQL.
