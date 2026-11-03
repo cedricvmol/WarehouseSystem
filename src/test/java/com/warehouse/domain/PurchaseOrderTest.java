@@ -104,7 +104,6 @@ class PurchaseOrderTest {
     class LineItemsEncapsulation {
 
         @Test
-        @Disabled("KAN-88 - not implemented yet")
         @Story("Create purchase order")
         @Severity(SeverityLevel.CRITICAL)
         @DisplayName("Clearing the returned line item list does not empty the order")
@@ -121,7 +120,6 @@ class PurchaseOrderTest {
         }
 
         @Test
-        @Disabled("KAN-88 - not implemented yet")
         @Story("Create purchase order")
         @DisplayName("Changing the list passed to the constructor afterwards does not change the order")
         void constructorListIsNotShared() {

@@ -9,7 +9,7 @@ public class SalesOrder {
     private Customer customer;
     private LocalDateTime orderDate;
     private OrderStatus orderStatus;
-    private List<SalesOrderLineItem> salesOrderLineItems;
+    private final List<SalesOrderLineItem> salesOrderLineItems;
 
     public SalesOrder(int salesOrderId, Customer customer, LocalDateTime orderDate, OrderStatus orderStatus, List<SalesOrderLineItem> salesOrderLineItems) {
         if(salesOrderLineItems == null || salesOrderLineItems.isEmpty()) throw new IllegalArgumentException("There are no line items in your sales order.");
@@ -17,7 +17,7 @@ public class SalesOrder {
         this.customer = customer;
         this.orderDate = orderDate;
         this.orderStatus = orderStatus;
-        this.salesOrderLineItems = salesOrderLineItems;
+        this.salesOrderLineItems = List.copyOf(salesOrderLineItems);
     }
 
      public SalesOrder(Customer customer,List<SalesOrderLineItem> salesOrderLineItems){

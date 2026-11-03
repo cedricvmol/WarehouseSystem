@@ -9,7 +9,7 @@ public class PurchaseOrder {
     private Supplier supplier;
     private LocalDateTime orderDate;
     private OrderStatus orderStatus;
-    private List<PurchaseOrderLineItem> purchaseOrderLineItems;
+    private final List<PurchaseOrderLineItem> purchaseOrderLineItems;
 
     public PurchaseOrder(int purchaseOrderId,Supplier supplier,LocalDateTime orderDate,OrderStatus orderStatus,List<PurchaseOrderLineItem> purchaseOrderLineItems){
         if(purchaseOrderLineItems == null || purchaseOrderLineItems.isEmpty()) throw new IllegalArgumentException("There are no line items in your purchase order.");
@@ -17,7 +17,7 @@ public class PurchaseOrder {
         this.supplier = supplier;
         this.orderDate = orderDate;
         this.orderStatus = orderStatus;
-        this.purchaseOrderLineItems = purchaseOrderLineItems;
+        this.purchaseOrderLineItems = List.copyOf(purchaseOrderLineItems);
     }
 
     public PurchaseOrder(Supplier supplier, List<PurchaseOrderLineItem> purchaseOrderLineItems){
