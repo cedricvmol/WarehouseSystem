@@ -143,7 +143,6 @@ class MasterDataValidationTest {
 
         @ParameterizedTest(name = "product id {0} is rejected")
         @ValueSource(ints = {0, -1})
-        @Disabled("KAN-102 D9 - not implemented yet")
         @DisplayName("Product with id <= 0 is rejected")
         void productId(int id) {
             assertThrows(IllegalArgumentException.class, () -> new Product(id, "Widget", 5, supplier));
@@ -151,7 +150,6 @@ class MasterDataValidationTest {
 
         @ParameterizedTest(name = "customer id {0} is rejected")
         @ValueSource(ints = {0, -1})
-        @Disabled("KAN-102 D9 - not implemented yet")
         @DisplayName("Customer with id <= 0 is rejected")
         void customerId(int id) {
             assertThrows(IllegalArgumentException.class, () -> new Customer(id, "Acme", "acme@example.com"));
@@ -159,7 +157,6 @@ class MasterDataValidationTest {
 
         @ParameterizedTest(name = "supplier id {0} is rejected")
         @ValueSource(ints = {0, -1})
-        @Disabled("KAN-102 D9 - not implemented yet")
         @DisplayName("Supplier with id <= 0 is rejected")
         void supplierId(int id) {
             assertThrows(IllegalArgumentException.class, () -> new Supplier(id, "Parts Inc", "parts@example.com"));
@@ -167,7 +164,6 @@ class MasterDataValidationTest {
 
         @ParameterizedTest(name = "bin id {0} is rejected")
         @ValueSource(ints = {0, -1})
-        @Disabled("KAN-102 D9 - not implemented yet")
         @DisplayName("Bin with id <= 0 is rejected")
         void binId(int id) {
             assertThrows(IllegalArgumentException.class, () -> new Bin(id, "A1"));

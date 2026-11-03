@@ -7,7 +7,7 @@ public class Customer {
     private String email;
 
     public Customer(int customerId, String name, String email) {
-        this.customerId = customerId;
+        setCustomerId(customerId);
         this.name = name;
         this.email = email;
     }
@@ -22,5 +22,12 @@ public class Customer {
 
     public String getEmail() {
         return email;
+    }
+
+    private void setCustomerId(int customerId){
+        if(customerId < 1){
+            throw new IllegalArgumentException("Customer ID must be at least 1");
+        }
+        this.customerId = customerId;
     }
 }

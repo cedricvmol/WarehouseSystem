@@ -6,7 +6,7 @@ public class Bin {
     private String locationCode;
 
     public Bin(int binId, String locationCode) {
-        this.binId = binId;
+        setBinId(binId);
         this.locationCode = locationCode;
     }
 
@@ -16,5 +16,12 @@ public class Bin {
 
     public String getLocationCode() {
         return locationCode;
+    }
+
+    private void setBinId(int binId){
+        if(binId < 1){
+            throw new IllegalArgumentException("Bin ID must be at least 1");
+        }
+        this.binId = binId;
     }
 }

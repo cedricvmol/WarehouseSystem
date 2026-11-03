@@ -7,7 +7,7 @@ public class Supplier {
     private String email;
 
     public Supplier(int supplierId, String name, String email) {
-        this.supplierId = supplierId;
+        setSupplierId(supplierId);
         this.name = name;
         this.email = email;
     }
@@ -22,5 +22,12 @@ public class Supplier {
 
     public String getEmail() {
         return email;
+    }
+
+    private void setSupplierId(int supplierId){
+        if(supplierId < 1){
+            throw new IllegalArgumentException("Supplier ID must be at least 1");
+        }
+        this.supplierId = supplierId;
     }
 }

@@ -8,7 +8,7 @@ public class Product {
     private Supplier supplier;
 
     public Product(int productId, String name, int threshold, Supplier supplier) {
-        this.productId = productId;
+        setProductId(productId);
         this.name = name;
         this.threshold = threshold;
         this.supplier = supplier;
@@ -28,5 +28,12 @@ public class Product {
 
     public Supplier getSupplier() {
         return supplier;
+    }
+
+    private void setProductId(int productId){
+        if(productId < 1){
+            throw new IllegalArgumentException("Product ID must be at least 1");
+        }
+        this.productId = productId;
     }
 }
