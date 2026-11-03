@@ -113,6 +113,12 @@ stories komen.
   - Seed alleen voor stabiele referentiedata (supplier 1, customer 1,
     bins 1/2, "999 bestaat niet").
   - De DB groeit bij elke run met een paar rijen; dat is aanvaard.
+- **Wat manueel, wat automatisch.** Validatieregels (grenswaarden,
+  ongeldige invoer) worden gedekt door unit-tests — geen manuele case,
+  tenzij de CLI er iets eigens mee doet. Manueel test flows end-to-end en
+  wat de gebruiker ziet (bv. order aanmaken, stock toevoegen en niveau
+  checken). Regels die via de CLI onbereikbaar zijn (bv. order zonder
+  partij) zijn sowieso alleen automatisch.
 
 #### Structuur in Testiny
 
@@ -267,3 +273,9 @@ Voorstel: pas een agent maken wanneer een laag bestaat en herhaalwerk heeft.
   afhankelijke data op een zelf gemaakt record; seed alleen voor stabiele
   referentiedata. Reden: een `DELETE` vóór elke run kost telkens tijd.
   Toegepast op TC-25 … TC-34; dit is de basis voor de regressieset.
+- 2026-11-04 — **Validatieregels alleen automatisch.** Grenswaarden en
+  ongeldige invoer zijn gedekt door unit-tests; manuele cases zijn voor
+  flows en wat de gebruiker ziet. Reden: een manuele case voor bv.
+  "stock -1 geweigerd" vindt niets wat de unit-test niet al vindt en maakt
+  het testwerk onnodig zwaar. Toegepast op KAN-87 (geen nieuwe manuele
+  cases).
