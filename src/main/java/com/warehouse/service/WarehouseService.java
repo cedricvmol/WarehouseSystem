@@ -85,8 +85,10 @@ public class WarehouseService {
     }
 
     public int createPurchaseOrder(int supplierId, Map<Integer,Integer> lineItems) throws SQLException {
+        if(lineItems == null){
+            throw new IllegalArgumentException("No line items were given for the purchase order.");
+        }
         List<PurchaseOrderLineItem> purchaseOrderLineItems = new ArrayList<>();
-
         for(Map.Entry<Integer,Integer> item : lineItems.entrySet())
         {
             Product product = findProduct(item.getKey());
@@ -100,8 +102,10 @@ public class WarehouseService {
     }
 
     public int createSalesOrder(int customerId,Map<Integer,Integer> lineItems) throws SQLException{
+        if(lineItems == null){
+            throw new IllegalArgumentException("No line items were given for the sales order.");
+        }
         List<SalesOrderLineItem> salesOrderLineItems = new ArrayList<>();
-
         for(Map.Entry<Integer,Integer> item : lineItems.entrySet()){
             Product product = findProduct(item.getKey());
             SalesOrderLineItem salesOrderLineItem = new SalesOrderLineItem(product,item.getValue());

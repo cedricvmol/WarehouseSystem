@@ -447,7 +447,6 @@ class WarehouseServiceTest {
     class NullLineItems {
 
         @Test
-        @Disabled("KAN-89 - not implemented yet")
         @Story("Create purchase order")
         @DisplayName("Create purchase order with null line items gives IllegalArgumentException, nothing stored")
         void createPurchaseOrderWithNullLineItems() throws Exception {
@@ -456,7 +455,6 @@ class WarehouseServiceTest {
         }
 
         @Test
-        @Disabled("KAN-89 - not implemented yet")
         @Story("Create sales order")
         @DisplayName("Create sales order with null line items gives IllegalArgumentException, nothing stored")
         void createSalesOrderWithNullLineItems() throws Exception {
