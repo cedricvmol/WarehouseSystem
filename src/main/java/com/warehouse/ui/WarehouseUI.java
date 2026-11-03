@@ -326,8 +326,10 @@ public class WarehouseUI {
             for(Product product : products){
                 System.out.printf("  %-5d %-22s %-9d %-20s%n", product.getProductId(), product.getName(),product.getThreshold(), product.getSupplier().getName());
             }
+        }else {
+            System.out.println("  No products found.");
         }
-        System.out.println("  No products found.");
+
     }
 
     public void giveListAllSuppliers() throws SQLException{
@@ -341,8 +343,10 @@ public class WarehouseUI {
             for(Supplier supplier : suppliers){
                 System.out.printf("  %-5d %-22s %-28s%n", supplier.getSupplierId(), supplier.getName(), supplier.getEmail());
             }
+        }else {
+            System.out.println("  No suppliers found.");
         }
-        System.out.println("  No suppliers found.");
+
     }
 
     public void giveListAllCustomers() throws SQLException{
@@ -356,8 +360,10 @@ public class WarehouseUI {
             for(Customer customer : customers){
                 System.out.printf("  %-5d %-22s %-28s%n",customer.getCustomerId(),customer.getName(),customer.getEmail());
             }
+        }else {
+            System.out.println("  No customers found.");
         }
-        System.out.println("  No customers found.");
+
     }
 
 
@@ -373,7 +379,9 @@ public class WarehouseUI {
             for(Bin bin : bins){
                 System.out.printf("  %-5d %-15s%n", bin.getBinId(),bin.getLocationCode());
             }
+        }else {
+            System.out.println("  No bins found.");
         }
-        System.out.println("  No bins found.");
+
     }
 }
