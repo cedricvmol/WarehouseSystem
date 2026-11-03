@@ -10,6 +10,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class BinDao {
 
@@ -29,7 +30,7 @@ public class BinDao {
         }
     }
 
-    public Bin findById(int binId) throws SQLException{
+    public Optional<Bin> findById(int binId) throws SQLException{
         try(PreparedStatement ps = connection.prepareStatement("SELECT * FROM bins WHERE binId = ?"))
         {
             ps.setInt(1,binId);
@@ -38,11 +39,11 @@ public class BinDao {
                     String locationCode = rs.getString("locationCode");
 
                     Bin bin = new Bin(binId,locationCode);
-                    return  bin;
+                    return  Optional.of(bin);
                 }
             }
         }
-        throw new IllegalArgumentException("No bin found with id: " + binId + ".");
+        return Optional.empty();
     }
 
     public List<Bin> findAll() throws SQLException{

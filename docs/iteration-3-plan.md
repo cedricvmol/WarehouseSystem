@@ -32,8 +32,25 @@ Given/When/Then acceptance criteria, Taak for technical work, label
 | KAN-102 | Story | Reject invalid master data input (D3, D4, D5, D9) — split from KAN-87 |
 | KAN-88 | Bug | Order line items can be modified after creation |
 | KAN-89 | Bug | `null` line items → unhandled `NullPointerException` |
-| KAN-94 | Bug | Foreign key violation shows generic "storage layer" error |
+| KAN-94 | Bug | Foreign key violation shows generic "storage layer" error — **closed, not reproducible** (DAO `findById` already rejected unknown IDs) |
 | KAN-95 | Story | List master data (products, suppliers, customers, bins) |
+
+### Found during Iteration 3
+| Key | Type | Summary |
+|---|---|---|
+| KAN-103 | Bug | Duplicate ID on add product/supplier/customer/bin shows generic "storage layer" error — split from KAN-94 |
+
+## Open to-dos
+- [ ] **KAN-103 — manual test cases in Testiny** (folder master data, title
+  `[KAN-103] ...`, SQL check as last step): duplicate ID rejected for product,
+  supplier, customer and bin; new ID still added. Automated service tests
+  exist (`WarehouseServiceTest$DuplicateId`).
+- [ ] **Duplicate stock row** — `[5] Add stock item` for an existing
+  product + bin breaks `PRIMARY KEY(productId, binId)` → generic storage
+  message. Decide the behaviour (error or add quantity) in KAN-99 / KAN-98.
+- [ ] **`Optional` inconsistency** — master data DAOs return `Optional` from
+  `findById` (KAN-103); `PurchaseOrderDao`, `SalesOrderDao` and `Repository`
+  still throw. Align when touching the order DAOs (KAN-101).
 
 ## Decisions
 - **One bin per receipt.** The user picks one bin; all line items go there.

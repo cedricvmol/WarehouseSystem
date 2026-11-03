@@ -70,7 +70,7 @@ public class PurchaseOrderDao implements Repository<PurchaseOrder,Integer>{
             {
                 if(rs.next()){
                     int supplierId = rs.getInt("supplierId");
-                    Supplier supplier = supplierDao.findById(supplierId);
+                    Supplier supplier = supplierDao.findById(supplierId).orElseThrow(()-> new IllegalStateException("Purchase order " + integer + " refers to supplier " + supplierId+ ", which does not exist." ));
                     String orderDate = rs.getString("orderDate");
                     LocalDateTime date = LocalDateTime.parse(orderDate, formatter);
                     String orderStatus = rs.getString("orderStatus");
@@ -84,7 +84,7 @@ public class PurchaseOrderDao implements Repository<PurchaseOrder,Integer>{
                                 int productId = rsLineItem.getInt("productId");
                                 int quantity = rsLineItem.getInt("quantity");
 
-                                Product product = productDao.findById(productId);
+                                Product product = productDao.findById(productId).orElseThrow(() -> new IllegalStateException("Purchase order "+ integer + " has a line item for product "+ productId +", which does not exist."));
                                 purchaseOrderLineItems.add(new PurchaseOrderLineItem(product,quantity));
                             }
                         }
@@ -108,7 +108,7 @@ public class PurchaseOrderDao implements Repository<PurchaseOrder,Integer>{
 
                 int purchaseOrderId = rs.getInt("purchaseOrderId");
                 int supplierId = rs.getInt("supplierId");
-                Supplier supplier = supplierDao.findById(supplierId);
+                Supplier supplier = supplierDao.findById(supplierId).orElseThrow(()-> new IllegalStateException("Purchase order " + purchaseOrderId + " refers to supplier " + supplierId+ ", which does not exist." ));
 
                 String orderDate = rs.getString("orderDate");
                 LocalDateTime date = LocalDateTime.parse(orderDate, formatter);
@@ -123,7 +123,7 @@ public class PurchaseOrderDao implements Repository<PurchaseOrder,Integer>{
                     {
                         while(rsLine.next()){
                             int productId = rsLine.getInt("productId");
-                            Product product = productDao.findById(productId);
+                            Product product = productDao.findById(productId).orElseThrow(() -> new IllegalStateException("Purchase order "+ purchaseOrderId + " has a line item for product "+ productId +", which does not exist."));
 
                             int quantity = rsLine.getInt("quantity");
 

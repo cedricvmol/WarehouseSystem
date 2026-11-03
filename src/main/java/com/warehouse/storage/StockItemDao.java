@@ -46,7 +46,10 @@ public class StockItemDao {
                 if(rs.next()){
                     int quantity = rs.getInt("quantity");
 
-                    StockItem stockItem = new StockItem(productDao.findById(productId),binDao.findById(binId),quantity);
+                    Product product = productDao.findById(productId).orElseThrow(() -> new IllegalStateException("Stock item (product "+productId+", bin "+binId+") refers to product "+ productId+", which does not exist."));
+                    Bin bin = binDao.findById(binId).orElseThrow(()-> new IllegalStateException("Stock item (product "+productId+", bin "+binId+") refers to bin "+ binId+", which does not exist."));
+
+                    StockItem stockItem = new StockItem(product,bin,quantity);
                     return stockItem;
                 }
             }
@@ -66,7 +69,10 @@ public class StockItemDao {
                     int quantity = rs.getInt("quantity");
                     int binId = rs.getInt("binId");
 
-                    StockItem stockItem = new StockItem(productDao.findById(productId),binDao.findById(binId),quantity);
+                    Product product = productDao.findById(productId).orElseThrow(() -> new IllegalStateException("Stock item (product "+productId+", bin "+binId+") refers to product "+ productId+", which does not exist."));
+                    Bin bin = binDao.findById(binId).orElseThrow(()-> new IllegalStateException("Stock item (product "+productId+", bin "+binId+") refers to bin "+ binId+", which does not exist."));
+
+                    StockItem stockItem = new StockItem(product,bin,quantity);
                     stockItems.add(stockItem);
                 }
             }
@@ -85,8 +91,8 @@ public class StockItemDao {
                 int binId = rs.getInt("binId");
                 int quantity = rs.getInt("quantity");
 
-                Product product = productDao.findById(productId);
-                Bin bin = binDao.findById(binId);
+                Product product = productDao.findById(productId).orElseThrow(() -> new IllegalStateException("Stock item (product "+productId+", bin "+binId+") refers to product "+ productId+", which does not exist."));
+                Bin bin = binDao.findById(binId).orElseThrow(()-> new IllegalStateException("Stock item (product "+productId+", bin "+binId+") refers to bin "+ binId+", which does not exist."));
 
                 StockItem stockItem = new StockItem(product,bin,quantity);
                 stockItems.add(stockItem);

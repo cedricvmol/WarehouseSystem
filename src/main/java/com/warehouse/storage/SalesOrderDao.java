@@ -75,7 +75,7 @@ public class SalesOrderDao implements Repository<SalesOrder,Integer>{
                 if(rs.next())
                 {
                     int customerId = rs.getInt("customerId");
-                    Customer customer = customerDao.findById(customerId);
+                    Customer customer = customerDao.findById(customerId).orElseThrow(()-> new IllegalStateException("Sales order " + integer + " refers to customer " + customerId+ ", which does not exist." ));
 
                     String orderDate = rs.getString("orderDate");
                     LocalDateTime date = LocalDateTime.parse(orderDate, formatter);
@@ -93,7 +93,7 @@ public class SalesOrderDao implements Repository<SalesOrder,Integer>{
                                 int productId = rsLineItem.getInt("productId");
                                 int quantity = rsLineItem.getInt("quantity");
 
-                                Product product = productDao.findById(productId);
+                                Product product = productDao.findById(productId).orElseThrow(() -> new IllegalStateException("Sales order "+ integer + " has a line item for product "+ productId +", which does not exist."));
                                 salesOrderLineItems.add(new SalesOrderLineItem(product,quantity));
                             }
                         }
@@ -116,16 +116,15 @@ public class SalesOrderDao implements Repository<SalesOrder,Integer>{
             while (rs.next())
             {
                 int salesOrderId = rs.getInt("salesOrderId");
-
                 int customerId = rs.getInt("customerId");
-                Customer customer = customerDao.findById(customerId);
+
+                Customer customer = customerDao.findById(customerId).orElseThrow(()-> new IllegalStateException("Sales order " + salesOrderId + " refers to customer " + customerId+ ", which does not exist." ));
 
                 String orderDate = rs.getString("orderDate");
                 LocalDateTime date = LocalDateTime.parse(orderDate, formatter);
-
                 String orderStatus = rs.getString("orderStatus");
-
                 List<SalesOrderLineItem> salesOrderLineItems = new ArrayList<>();
+
                 try(PreparedStatement psLine = connection.prepareStatement("SELECT * FROM salesOrderLineItems WHERE salesOrderId = ?"))
                 {
                     psLine.setInt(1,salesOrderId);
@@ -134,7 +133,7 @@ public class SalesOrderDao implements Repository<SalesOrder,Integer>{
                         while(rsLine.next())
                         {
                             int productId = rsLine.getInt("productId");
-                            Product product = productDao.findById(productId);
+                            Product product = productDao.findById(productId).orElseThrow(() -> new IllegalStateException("Sales order "+ salesOrderId + " has a line item for product "+ productId +", which does not exist."));
 
                             int quantity = rsLine.getInt("quantity");
 

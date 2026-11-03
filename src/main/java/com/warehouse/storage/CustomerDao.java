@@ -8,6 +8,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class CustomerDao {
 
@@ -27,7 +28,7 @@ public class CustomerDao {
         }
     }
 
-    public Customer findById(int customerId) throws SQLException{
+    public Optional<Customer> findById(int customerId) throws SQLException{
         try(PreparedStatement ps = connection.prepareStatement("SELECT * FROM customers WHERE customerId = ?"))
         {
             ps.setInt(1,customerId);
@@ -38,11 +39,11 @@ public class CustomerDao {
                     String email = rs.getString("email");
 
                     Customer customer = new Customer(customerId,name,email);
-                    return customer;
+                    return Optional.of(customer);
                 }
             }
         }
-        throw new IllegalArgumentException("No customer found with id: " + customerId + ".");
+        return Optional.empty();
     }
 
     public List<Customer> findAll() throws SQLException {

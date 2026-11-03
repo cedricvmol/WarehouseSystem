@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -37,8 +38,9 @@ import static org.mockito.Mockito.when;
 
 /**
  * Unit tests for {@link WarehouseService} with mocked DAOs: no database involved.
- * A DAO's findById throws IllegalArgumentException when nothing is found; the
- * mocks reproduce that to test how the service reacts.
+ * Master data DAOs (product, bin, supplier, customer) return Optional.empty()
+ * when nothing is found (KAN-103); the order DAOs still throw
+ * IllegalArgumentException. The mocks reproduce that to test how the service reacts.
  */
 @Tag("unit")
 @Epic("Warehouse service")
@@ -82,7 +84,7 @@ class WarehouseServiceTest {
         @Severity(SeverityLevel.CRITICAL)
         @DisplayName("Add product with existing supplier stores it with that supplier")
         void addProductWithExistingSupplier() throws Exception {
-            when(supplierDao.findById(7)).thenReturn(supplier);
+            when(supplierDao.findById(7)).thenReturn(Optional.of(supplier));
 
             service.addProduct(1, "Widget", 5, 7);
 
@@ -101,7 +103,7 @@ class WarehouseServiceTest {
         @Severity(SeverityLevel.CRITICAL)
         @DisplayName("Add product with unknown supplier is rejected and nothing is stored")
         void addProductWithUnknownSupplier() throws Exception {
-            when(supplierDao.findById(99)).thenThrow(notFound("supplier"));
+            when(supplierDao.findById(99)).thenReturn(Optional.empty());
 
             assertThrows(IllegalArgumentException.class, () -> service.addProduct(1, "Widget", 5, 99));
             verify(productDao, never()).insert(any());
@@ -149,6 +151,65 @@ class WarehouseServiceTest {
                     () -> assertEquals("Parts Inc", stored.getValue().getName()),
                     () -> assertEquals("parts@example.com", stored.getValue().getEmail())
             );
+        }
+    }
+
+    @Nested
+    @Feature("Master data")
+    @Issue("KAN-103")
+    @DisplayName("KAN-103 - duplicate ID is rejected")
+    class DuplicateId {
+
+        @Test
+        @Story("Add product")
+        @Severity(SeverityLevel.CRITICAL)
+        @DisplayName("Add product with existing ID is rejected with a clear message, nothing stored")
+        void addProductWithExistingId() throws Exception {
+            when(productDao.findById(1)).thenReturn(Optional.of(widget));
+
+            IllegalArgumentException e = assertThrows(IllegalArgumentException.class,
+                    () -> service.addProduct(1, "Other", 3, 7));
+            assertEquals("A product with id 1 already exists.", e.getMessage());
+            verify(productDao, never()).insert(any());
+        }
+
+        @Test
+        @Story("Add supplier")
+        @Severity(SeverityLevel.CRITICAL)
+        @DisplayName("Add supplier with existing ID is rejected with a clear message, nothing stored")
+        void addSupplierWithExistingId() throws Exception {
+            when(supplierDao.findById(7)).thenReturn(Optional.of(supplier));
+
+            IllegalArgumentException e = assertThrows(IllegalArgumentException.class,
+                    () -> service.addSupplier(7, "Other", "other@example.com"));
+            assertEquals("A supplier with id 7 already exists.", e.getMessage());
+            verify(supplierDao, never()).insert(any());
+        }
+
+        @Test
+        @Story("Add customer")
+        @Severity(SeverityLevel.CRITICAL)
+        @DisplayName("Add customer with existing ID is rejected with a clear message, nothing stored")
+        void addCustomerWithExistingId() throws Exception {
+            when(customerDao.findById(8)).thenReturn(Optional.of(customer));
+
+            IllegalArgumentException e = assertThrows(IllegalArgumentException.class,
+                    () -> service.addCustomer(8, "Other", "other@example.com"));
+            assertEquals("A customer with id 8 already exists.", e.getMessage());
+            verify(customerDao, never()).insert(any());
+        }
+
+        @Test
+        @Story("Add bin")
+        @Severity(SeverityLevel.CRITICAL)
+        @DisplayName("Add bin with existing ID is rejected with a clear message, nothing stored")
+        void addBinWithExistingId() throws Exception {
+            when(binDao.findById(1)).thenReturn(Optional.of(binA1));
+
+            IllegalArgumentException e = assertThrows(IllegalArgumentException.class,
+                    () -> service.addBin(1, "A-02-02"));
+            assertEquals("A bin with id 1 already exists.", e.getMessage());
+            verify(binDao, never()).insert(any());
         }
     }
 
@@ -213,8 +274,8 @@ class WarehouseServiceTest {
         @Severity(SeverityLevel.CRITICAL)
         @DisplayName("Add stock for existing product and bin stores it")
         void addStockItem() throws Exception {
-            when(productDao.findById(1)).thenReturn(widget);
-            when(binDao.findById(1)).thenReturn(binA1);
+            when(productDao.findById(1)).thenReturn(Optional.of(widget));
+            when(binDao.findById(1)).thenReturn(Optional.of(binA1));
 
             service.addStockItem(1, 1, 20);
 
@@ -231,7 +292,7 @@ class WarehouseServiceTest {
         @Story("Add stock")
         @DisplayName("Add stock for unknown product is rejected and nothing is stored")
         void addStockItemUnknownProduct() throws Exception {
-            when(productDao.findById(99)).thenThrow(notFound("product"));
+            when(productDao.findById(99)).thenReturn(Optional.empty());
 
             assertThrows(IllegalArgumentException.class, () -> service.addStockItem(99, 1, 20));
             verify(stockItemDao, never()).insert(any());
@@ -241,8 +302,8 @@ class WarehouseServiceTest {
         @Story("Add stock")
         @DisplayName("Add stock for unknown bin is rejected and nothing is stored")
         void addStockItemUnknownBin() throws Exception {
-            when(productDao.findById(1)).thenReturn(widget);
-            when(binDao.findById(99)).thenThrow(notFound("bin"));
+            when(productDao.findById(1)).thenReturn(Optional.of(widget));
+            when(binDao.findById(99)).thenReturn(Optional.empty());
 
             assertThrows(IllegalArgumentException.class, () -> service.addStockItem(1, 99, 20));
             verify(stockItemDao, never()).insert(any());
@@ -253,7 +314,7 @@ class WarehouseServiceTest {
         @Severity(SeverityLevel.CRITICAL)
         @DisplayName("Stock level is the sum over all bins")
         void stockLevelSumsAllBins() throws Exception {
-            when(productDao.findById(1)).thenReturn(widget);
+            when(productDao.findById(1)).thenReturn(Optional.of(widget));
             when(stockItemDao.findByProduct(1)).thenReturn(List.of(
                     new StockItem(widget, new Bin(1, "A1"), 3),
                     new StockItem(widget, new Bin(2, "A2"), 4),
@@ -266,7 +327,7 @@ class WarehouseServiceTest {
         @Story("Check stock level")
         @DisplayName("Product without stock has stock level 0")
         void stockLevelWithoutStockIsZero() throws Exception {
-            when(productDao.findById(1)).thenReturn(widget);
+            when(productDao.findById(1)).thenReturn(Optional.of(widget));
             when(stockItemDao.findByProduct(1)).thenReturn(List.of());
 
             assertEquals(0, service.checkStockLevel(1));
@@ -276,7 +337,7 @@ class WarehouseServiceTest {
         @Story("Check stock level")
         @DisplayName("Stock level of unknown product is rejected before stock is queried")
         void stockLevelUnknownProduct() throws Exception {
-            when(productDao.findById(99)).thenThrow(notFound("product"));
+            when(productDao.findById(99)).thenReturn(Optional.empty());
 
             assertThrows(IllegalArgumentException.class, () -> service.checkStockLevel(99));
             verify(stockItemDao, never()).findByProduct(anyInt());
@@ -298,9 +359,9 @@ class WarehouseServiceTest {
         @Severity(SeverityLevel.CRITICAL)
         @DisplayName("Create stores an OPEN order with supplier and line items, returns the generated id")
         void createPurchaseOrder() throws Exception {
-            when(productDao.findById(1)).thenReturn(widget);
-            when(productDao.findById(2)).thenReturn(gadget);
-            when(supplierDao.findById(7)).thenReturn(supplier);
+            when(productDao.findById(1)).thenReturn(Optional.of(widget));
+            when(productDao.findById(2)).thenReturn(Optional.of(gadget));
+            when(supplierDao.findById(7)).thenReturn(Optional.of(supplier));
             when(purchaseOrderDao.insert(any())).thenReturn(42);
             Map<Integer, Integer> lines = new LinkedHashMap<>();
             lines.put(1, 3);
@@ -324,7 +385,7 @@ class WarehouseServiceTest {
         @Story("Create purchase order")
         @DisplayName("Create with unknown product is rejected and nothing is stored")
         void createWithUnknownProduct() throws Exception {
-            when(productDao.findById(99)).thenThrow(notFound("product"));
+            when(productDao.findById(99)).thenReturn(Optional.empty());
 
             assertThrows(IllegalArgumentException.class, () -> service.createPurchaseOrder(7, Map.of(99, 3)));
             verify(purchaseOrderDao, never()).insert(any());
@@ -334,8 +395,8 @@ class WarehouseServiceTest {
         @Story("Create purchase order")
         @DisplayName("Create with unknown supplier is rejected and nothing is stored")
         void createWithUnknownSupplier() throws Exception {
-            when(productDao.findById(1)).thenReturn(widget);
-            when(supplierDao.findById(99)).thenThrow(notFound("supplier"));
+            when(productDao.findById(1)).thenReturn(Optional.of(widget));
+            when(supplierDao.findById(99)).thenReturn(Optional.empty());
 
             assertThrows(IllegalArgumentException.class, () -> service.createPurchaseOrder(99, Map.of(1, 3)));
             verify(purchaseOrderDao, never()).insert(any());
@@ -345,7 +406,7 @@ class WarehouseServiceTest {
         @Story("Create purchase order")
         @DisplayName("Create without line items is rejected and nothing is stored")
         void createWithoutLineItems() throws Exception {
-            when(supplierDao.findById(7)).thenReturn(supplier);
+            when(supplierDao.findById(7)).thenReturn(Optional.of(supplier));
 
             assertThrows(IllegalArgumentException.class, () -> service.createPurchaseOrder(7, new HashMap<>()));
             verify(purchaseOrderDao, never()).insert(any());
@@ -401,9 +462,9 @@ class WarehouseServiceTest {
         @Severity(SeverityLevel.CRITICAL)
         @DisplayName("Create stores an OPEN order with customer and line items, returns the generated id")
         void createSalesOrder() throws Exception {
-            when(productDao.findById(1)).thenReturn(widget);
-            when(productDao.findById(2)).thenReturn(gadget);
-            when(customerDao.findById(8)).thenReturn(customer);
+            when(productDao.findById(1)).thenReturn(Optional.of(widget));
+            when(productDao.findById(2)).thenReturn(Optional.of(gadget));
+            when(customerDao.findById(8)).thenReturn(Optional.of(customer));
             when(salesOrderDao.insert(any())).thenReturn(43);
             Map<Integer, Integer> lines = new LinkedHashMap<>();
             lines.put(1, 3);
@@ -427,7 +488,7 @@ class WarehouseServiceTest {
         @Story("Create sales order")
         @DisplayName("Create with unknown product is rejected and nothing is stored")
         void createWithUnknownProduct() throws Exception {
-            when(productDao.findById(99)).thenThrow(notFound("product"));
+            when(productDao.findById(99)).thenReturn(Optional.empty());
 
             assertThrows(IllegalArgumentException.class, () -> service.createSalesOrder(8, Map.of(99, 3)));
             verify(salesOrderDao, never()).insert(any());
@@ -437,8 +498,8 @@ class WarehouseServiceTest {
         @Story("Create sales order")
         @DisplayName("Create with unknown customer is rejected and nothing is stored")
         void createWithUnknownCustomer() throws Exception {
-            when(productDao.findById(1)).thenReturn(widget);
-            when(customerDao.findById(99)).thenThrow(notFound("customer"));
+            when(productDao.findById(1)).thenReturn(Optional.of(widget));
+            when(customerDao.findById(99)).thenReturn(Optional.empty());
 
             assertThrows(IllegalArgumentException.class, () -> service.createSalesOrder(99, Map.of(1, 3)));
             verify(salesOrderDao, never()).insert(any());
@@ -448,7 +509,7 @@ class WarehouseServiceTest {
         @Story("Create sales order")
         @DisplayName("Create without line items is rejected and nothing is stored")
         void createWithoutLineItems() throws Exception {
-            when(customerDao.findById(8)).thenReturn(customer);
+            when(customerDao.findById(8)).thenReturn(Optional.of(customer));
 
             assertThrows(IllegalArgumentException.class, () -> service.createSalesOrder(8, new HashMap<>()));
             verify(salesOrderDao, never()).insert(any());
@@ -526,7 +587,7 @@ class WarehouseServiceTest {
         @Story("Reject invalid input")
         @DisplayName("Purchase order with quantity <= 0 is rejected, nothing stored")
         void purchaseOrderQuantityRejected(int quantity) throws Exception {
-            when(productDao.findById(1)).thenReturn(widget);
+            when(productDao.findById(1)).thenReturn(Optional.of(widget));
 
             assertThrows(IllegalArgumentException.class, () -> service.createPurchaseOrder(7, Map.of(1, quantity)));
             verify(purchaseOrderDao, never()).insert(any());
@@ -538,7 +599,7 @@ class WarehouseServiceTest {
         @Story("Reject invalid input")
         @DisplayName("Sales order with quantity <= 0 is rejected, nothing stored")
         void salesOrderQuantityRejected(int quantity) throws Exception {
-            when(productDao.findById(1)).thenReturn(widget);
+            when(productDao.findById(1)).thenReturn(Optional.of(widget));
 
             assertThrows(IllegalArgumentException.class, () -> service.createSalesOrder(8, Map.of(1, quantity)));
             verify(salesOrderDao, never()).insert(any());

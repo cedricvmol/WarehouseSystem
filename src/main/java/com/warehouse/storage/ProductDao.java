@@ -9,6 +9,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 
 public class ProductDao {
@@ -34,7 +35,7 @@ public class ProductDao {
         }
     }
 
-    public Product findById(int productId) throws SQLException {
+    public Optional<Product> findById(int productId) throws SQLException {
         try(PreparedStatement preparedStatement = connection.prepareStatement("SELECT * FROM products WHERE productId = ?"))
         {
             preparedStatement.setInt(1,productId);
@@ -45,13 +46,13 @@ public class ProductDao {
                     int threshold = rs.getInt("threshold");
                     int supplierId = rs.getInt("supplierId");
 
-                    Supplier supplier = supplierDao.findById(supplierId);
+                    Supplier supplier = supplierDao.findById(supplierId).orElseThrow(()-> new IllegalStateException("Product " + productId + " refers to supplier " + supplierId+ ", which does not exist." ));
                     Product product = new Product(productId,name,threshold,supplier);
-                    return product;
+                    return Optional.of(product);
                 }
             }
         }
-        throw new IllegalArgumentException("No product found with id: " + productId + ".");
+        return Optional.empty();
     }
 
     public List<Product> findAll() throws SQLException{
@@ -65,7 +66,7 @@ public class ProductDao {
                 int threshold = rs.getInt("threshold");
                 int supplierId = rs.getInt("supplierId");
 
-                Supplier supplier = supplierDao.findById(supplierId);
+                Supplier supplier = supplierDao.findById(supplierId).orElseThrow(()-> new IllegalStateException("Product " + productId + " refers to supplier " + supplierId+ ", which does not exist." ));
 
                 Product product = new Product(productId,name,threshold,supplier);
                 products.add(product);

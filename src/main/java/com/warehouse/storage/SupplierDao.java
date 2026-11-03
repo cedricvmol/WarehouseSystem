@@ -9,6 +9,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class SupplierDao {
 
@@ -29,7 +30,7 @@ public class SupplierDao {
         }
     }
 
-    public Supplier findById(int supplierId) throws SQLException {
+    public Optional<Supplier> findById(int supplierId) throws SQLException {
         try (PreparedStatement ps = connection.prepareStatement("SELECT * FROM suppliers WHERE supplierId = ?"))
         {
             ps.setInt(1,supplierId);
@@ -40,11 +41,11 @@ public class SupplierDao {
                     String email = rs.getString("email");
 
                     Supplier supplier = new Supplier(supplierId,name,email);
-                    return supplier;
+                    return Optional.of(supplier);
                 }
             }
         }
-        throw new IllegalArgumentException("No supplier found with id: " + supplierId + ".");
+        return Optional.empty();
     }
 
     public List<Supplier> findAll() throws SQLException{

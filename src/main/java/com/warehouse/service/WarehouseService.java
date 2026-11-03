@@ -29,22 +29,35 @@ public class WarehouseService {
     }
 
     public void addProduct(int productId,String name, int threshold,int supplierId) throws SQLException {
+        if(productDao.findById(productId).isPresent()){
+            throw new IllegalArgumentException("A product with id "+ productId +" already exists.");
+        }
+
         Supplier supplier = findSupplier(supplierId);
         Product product = new Product(productId,name,threshold,supplier);
         productDao.insert(product);
     }
 
     public void addBin(int binId,String locationCode) throws SQLException{
+        if(binDao.findById(binId).isPresent()){
+            throw new IllegalArgumentException("A bin with id "+ binId + " already exists.");
+        }
         Bin bin = new Bin(binId,locationCode);
         binDao.insert(bin);
     }
 
     public void addCustomer(int id,String name,String email) throws SQLException{
+        if(customerDao.findById(id).isPresent()){
+            throw new IllegalArgumentException("A customer with id "+ id + " already exists.");
+        }
         Customer customer = new Customer(id,name,email);
         customerDao.insert(customer);
     }
 
     public void addSupplier(int id,String name,String email) throws SQLException{
+        if(supplierDao.findById(id).isPresent()){
+            throw new IllegalArgumentException("A supplier with id "+ id + " already exists.");
+        }
         Supplier supplier = new Supplier(id,name,email);
         supplierDao.insert(supplier);
     }
@@ -57,19 +70,19 @@ public class WarehouseService {
     }
 
     public Product findProduct(int productId) throws SQLException {
-        return productDao.findById(productId);
+        return productDao.findById(productId).orElseThrow(() -> new IllegalArgumentException("No product found with id: "+ productId + "."));
     }
 
     public Bin findBin(int binId) throws SQLException{
-        return binDao.findById(binId);
+        return binDao.findById(binId).orElseThrow(()-> new IllegalArgumentException("No bin found with id: "+ binId + "."));
     }
 
     public Supplier findSupplier(int supplierId) throws SQLException{
-        return supplierDao.findById(supplierId);
+        return supplierDao.findById(supplierId).orElseThrow(()-> new IllegalArgumentException("No supplier found with id: "+ supplierId + "."));
     }
 
     public Customer findCustomer(int customerId) throws SQLException{
-        return customerDao.findById(customerId);
+        return customerDao.findById(customerId).orElseThrow(()-> new IllegalArgumentException("No customer found with id: "+ customerId + "."));
     }
 
     public int checkStockLevel(int productId) throws SQLException{
