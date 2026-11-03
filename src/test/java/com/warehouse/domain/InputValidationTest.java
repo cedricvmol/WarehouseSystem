@@ -42,7 +42,6 @@ class InputValidationTest {
 
         @ParameterizedTest(name = "quantity {0} is rejected")
         @ValueSource(ints = {0, -1})
-        @Disabled("KAN-87 AC1 - not implemented yet")
         @DisplayName("Purchase order line item with quantity <= 0 is rejected")
         void purchaseLineRejected(int quantity) {
             assertThrows(IllegalArgumentException.class, () -> new PurchaseOrderLineItem(product, quantity));
@@ -50,7 +49,6 @@ class InputValidationTest {
 
         @ParameterizedTest(name = "quantity {0} is rejected")
         @ValueSource(ints = {0, -1})
-        @Disabled("KAN-87 AC1 - not implemented yet")
         @DisplayName("Sales order line item with quantity <= 0 is rejected")
         void salesLineRejected(int quantity) {
             assertThrows(IllegalArgumentException.class, () -> new SalesOrderLineItem(product, quantity));

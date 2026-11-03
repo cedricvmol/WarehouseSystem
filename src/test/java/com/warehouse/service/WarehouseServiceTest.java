@@ -583,7 +583,6 @@ class WarehouseServiceTest {
 
         @ParameterizedTest(name = "quantity {0} is rejected")
         @ValueSource(ints = {0, -1})
-        @Disabled("KAN-87 AC1 - not implemented yet")
         @Story("Reject invalid input")
         @DisplayName("Purchase order with quantity <= 0 is rejected, nothing stored")
         void purchaseOrderQuantityRejected(int quantity) throws Exception {
@@ -595,7 +594,6 @@ class WarehouseServiceTest {
 
         @ParameterizedTest(name = "quantity {0} is rejected")
         @ValueSource(ints = {0, -1})
-        @Disabled("KAN-87 AC1 - not implemented yet")
         @Story("Reject invalid input")
         @DisplayName("Sales order with quantity <= 0 is rejected, nothing stored")
         void salesOrderQuantityRejected(int quantity) throws Exception {

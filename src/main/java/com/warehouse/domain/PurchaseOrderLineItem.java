@@ -6,6 +6,9 @@ public class PurchaseOrderLineItem {
     private int quantity;
 
     public PurchaseOrderLineItem(Product product , int quantity){
+        if(quantity <= 0){
+            throw new IllegalArgumentException("The quantity of the product must be higher than 0");
+        }
         this.product = product;
         this.quantity = quantity;
     }
