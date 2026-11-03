@@ -129,7 +129,7 @@ Record confirmed decisions about **this skill's role and behaviour** here
 - 2026-10-13 — Decided: this skill writes automated JUnit 5 tests and owns
   test reporting. Allure (dashboard, `@Epic/@Feature/@Story`, later
   `@Link("KAN-XX")`) and JaCoCo (coverage) are in `pom.xml`. Run locally with
-  JDK 21+ (now `~/.jdks/openjdk-27.0.1.0.3`; check `ls ~/.jdks` if it
+  JDK 21+ (now `~/.jdks/openjdk-26`; check `ls ~/.jdks` if it
   moved) via the Maven Wrapper (`./mvnw`).
 - 2026-10-13 — Long-term goal: a CI pipeline on every merge, with unit tests,
   automated E2E tests and possibly manual test cases (Testiny). The user wants
