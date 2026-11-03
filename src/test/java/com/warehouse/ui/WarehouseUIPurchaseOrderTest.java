@@ -94,6 +94,7 @@ class WarehouseUIPurchaseOrderTest {
         verify(service).createPurchaseOrder(7, Map.of(1, 3, 2, 4));
     }
 
+    // Summing replaces the domain rule D7 that was removed from KAN-87.
     @Test
     @DisplayName("Same product entered twice: quantities are added up into one line item")
     void sameProductTwiceIsSummed() throws Exception {

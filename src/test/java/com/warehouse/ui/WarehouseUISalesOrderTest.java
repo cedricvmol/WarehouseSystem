@@ -94,6 +94,7 @@ class WarehouseUISalesOrderTest {
         verify(service).createSalesOrder(7, Map.of(1, 3, 2, 4));
     }
 
+    // Summing replaces the domain rule D7 that was removed from KAN-87.
     @Test
     @DisplayName("Same product entered twice: quantities are added up into one line item")
     void sameProductTwiceIsSummed() throws Exception {
@@ -102,6 +103,16 @@ class WarehouseUISalesOrderTest {
         ui.createSalesOrder();
 
         verify(service).createSalesOrder(7, Map.of(1, 8));
+    }
+
+    @Test
+    @DisplayName("Same product with other products in between: still summed, other lines untouched")
+    void sameProductNotConsecutive() throws Exception {
+        WarehouseUI ui = uiWithInput("7", "1", "3", "1", "2", "4", "1", "1", "2", "2");
+
+        ui.createSalesOrder();
+
+        verify(service).createSalesOrder(7, Map.of(1, 5, 2, 4));
     }
 
     @Test
