@@ -7,6 +7,9 @@ public class StockItem {
     private int quantity;
 
     public StockItem(Product product, Bin bin, int quantity) {
+        if(quantity < 0){
+            throw new IllegalArgumentException("The quantity of the product can't be less than 0");
+        }
         this.product = product;
         this.bin = bin;
         this.quantity = quantity;

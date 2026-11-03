@@ -67,7 +67,6 @@ class InputValidationTest {
     class StockQuantity {
 
         @Test
-        @Disabled("KAN-87 AC2 - not implemented yet")
         @DisplayName("Stock quantity -1 is rejected")
         void negativeRejected() {
             assertThrows(IllegalArgumentException.class, () -> new StockItem(product, bin, -1));
