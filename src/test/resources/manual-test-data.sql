@@ -9,7 +9,7 @@
 -- existing data is never changed or deleted.
 --
 -- Covers test run TR-1 "Iteration 2 – Acceptance" (TC-1 … TC-18) and
--- TC-19 / TC-20 (KAN-87). Add new base data here when new test cases
+-- TC-19 / TC-20 (KAN-87) and the KAN-95 list cases. Add new base data here when new test cases
 -- need it.
 -- =====================================================================
 
@@ -27,6 +27,11 @@ INSERT OR IGNORE INTO products (productId, name, threshold, supplierId) VALUES
     (102, 'Cardboard box L',  20, 1),
     (103, 'Packing tape',     15, 1);
 
+-- Bins
+INSERT OR IGNORE INTO bins (binId, locationCode) VALUES
+    (1, 'A-01-01'),
+    (2, 'A-01-02');
+
 
 -- =====================================================================
 -- Checks — run after the inserts. Every row should say OK.
@@ -41,7 +46,9 @@ SELECT 'customer 1 exists',                          CASE WHEN EXISTS (SELECT 1 
 UNION ALL
 SELECT 'products 101-103 of supplier 1',             CASE WHEN (SELECT COUNT(*) FROM products WHERE productId IN (101, 102, 103) AND supplierId = 1) = 3 THEN 'OK' ELSE 'NOT OK' END
 UNION ALL
-SELECT 'supplier 999 does not exist',                CASE WHEN NOT EXISTS (SELECT 1 FROM suppliers WHERE supplierId = 999) THEN 'OK' ELSE 'NOT OK' END
+SELECT 'bins 1-2 with location codes',               CASE WHEN (SELECT COUNT(*) FROM bins WHERE (binId = 1 AND locationCode = 'A-01-01') OR (binId = 2 AND locationCode = 'A-01-02')) = 2 THEN 'OK' ELSE 'NOT OK' END
+UNION ALL
+SELECT 'supplier 999 does not exist',               CASE WHEN NOT EXISTS (SELECT 1 FROM suppliers WHERE supplierId = 999) THEN 'OK' ELSE 'NOT OK' END
 UNION ALL
 SELECT 'customer 999 does not exist',                CASE WHEN NOT EXISTS (SELECT 1 FROM customers WHERE customerId = 999) THEN 'OK' ELSE 'NOT OK' END
 UNION ALL

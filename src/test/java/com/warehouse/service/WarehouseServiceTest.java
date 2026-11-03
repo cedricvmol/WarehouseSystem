@@ -153,6 +153,57 @@ class WarehouseServiceTest {
     }
 
     @Nested
+    @Feature("Master data")
+    @DisplayName("List master data (KAN-95)")
+    class ListMasterData {
+
+        @Test
+        @Story("List products")
+        @DisplayName("List products returns every product from the DAO")
+        void listProducts() throws Exception {
+            when(productDao.findAll()).thenReturn(List.of(widget, gadget));
+
+            assertEquals(List.of(widget, gadget), service.giveListAllProducts());
+        }
+
+        @Test
+        @Story("List suppliers")
+        @DisplayName("List suppliers returns every supplier from the DAO")
+        void listSuppliers() throws Exception {
+            when(supplierDao.findAll()).thenReturn(List.of(supplier));
+
+            assertEquals(List.of(supplier), service.giveListAllSuppliers());
+        }
+
+        @Test
+        @Story("List customers")
+        @DisplayName("List customers returns every customer from the DAO")
+        void listCustomers() throws Exception {
+            when(customerDao.findAll()).thenReturn(List.of(customer));
+
+            assertEquals(List.of(customer), service.giveListAllCustomers());
+        }
+
+        @Test
+        @Story("List bins")
+        @DisplayName("List bins returns every bin from the DAO")
+        void listBins() throws Exception {
+            when(binDao.findAll()).thenReturn(List.of(binA1));
+
+            assertEquals(List.of(binA1), service.giveListAllBins());
+        }
+
+        @Test
+        @Story("List products")
+        @DisplayName("Empty table gives an empty list, not null")
+        void emptyListIsNotNull() throws Exception {
+            when(productDao.findAll()).thenReturn(List.of());
+
+            assertEquals(List.of(), service.giveListAllProducts());
+        }
+    }
+
+    @Nested
     @Feature("Stock")
     @DisplayName("Stock")
     class Stock {

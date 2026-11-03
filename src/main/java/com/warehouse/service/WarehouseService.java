@@ -130,7 +130,21 @@ public class WarehouseService {
         salesOrderDao.update(salesOrder);
     }
 
+    public List<Product> giveListAllProducts() throws SQLException{
+        return productDao.findAll();
+    }
 
+    public List<Supplier> giveListAllSuppliers() throws SQLException{
+        return supplierDao.findAll();
+    }
+
+    public List<Customer> giveListAllCustomers() throws SQLException{
+        return customerDao.findAll();
+    }
+
+    public List<Bin> giveListAllBins() throws SQLException{
+        return binDao.findAll();
+    }
 
 
 }

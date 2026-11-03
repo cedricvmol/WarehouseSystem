@@ -1,13 +1,14 @@
 package com.warehouse.ui;
 
+import com.warehouse.domain.Bin;
+import com.warehouse.domain.Customer;
+import com.warehouse.domain.Product;
+import com.warehouse.domain.Supplier;
 import com.warehouse.service.WarehouseService;
 
 
 import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.InputMismatchException;
-import java.util.Map;
-import java.util.Scanner;
+import java.util.*;
 
 public class WarehouseUI {
 
@@ -31,6 +32,10 @@ public class WarehouseUI {
             System.out.println("  [2]  Add supplier");
             System.out.println("  [3]  Add customer");
             System.out.println("  [4]  Add bin");
+            System.out.println("  [11] List products");
+            System.out.println("  [12] List suppliers");
+            System.out.println("  [13] List customers");
+            System.out.println("  [14] List bins");
             System.out.println("  ──────────────────────────────────");
             System.out.println("  STOCK");
             System.out.println("  [5]  Add stock item");
@@ -78,6 +83,18 @@ public class WarehouseUI {
                         break;
 
                     case "10" : cancelSalesOrder();
+                        break;
+
+                    case "11" : giveListAllProducts();
+                        break;
+
+                    case "12" : giveListAllSuppliers();
+                        break;
+
+                    case "13" : giveListAllCustomers();
+                        break;
+
+                    case "14" : giveListAllBins();
                         break;
 
                     case "0" : return;
@@ -295,5 +312,68 @@ public class WarehouseUI {
 
         warehouseService.cancelSalesOrder(orderId);
         System.out.println("  ✔ Sales order #" + orderId + " cancelled.");
+    }
+
+    public void giveListAllProducts() throws SQLException{
+        List<Product> products = warehouseService.giveListAllProducts();
+
+        if(!products.isEmpty()){
+
+            System.out.println("\n  ── PRODUCTS ──────────────────────────────────────────");
+            System.out.printf("  %-5s %-22s %-9s %-20s%n", "ID", "Name", "Threshold", "Supplier");
+            System.out.println("  ─────────────────────────────────────────────────────");
+
+            for(Product product : products){
+                System.out.printf("  %-5d %-22s %-9d %-20s%n", product.getProductId(), product.getName(),product.getThreshold(), product.getSupplier().getName());
+            }
+        }
+        System.out.println("  No products found.");
+    }
+
+    public void giveListAllSuppliers() throws SQLException{
+        List<Supplier> suppliers = warehouseService.giveListAllSuppliers();
+
+        if(!suppliers.isEmpty()){
+            System.out.println("\n  ── SUPPLIERS ─────────────────────────────────────────");
+            System.out.printf("  %-5s %-22s %-28s%n", "ID", "Name", "Email");
+            System.out.println("  ─────────────────────────────────────────────────────");
+
+            for(Supplier supplier : suppliers){
+                System.out.printf("  %-5d %-22s %-28s%n", supplier.getSupplierId(), supplier.getName(), supplier.getEmail());
+            }
+        }
+        System.out.println("  No suppliers found.");
+    }
+
+    public void giveListAllCustomers() throws SQLException{
+        List<Customer> customers = warehouseService.giveListAllCustomers();
+
+        if(!customers.isEmpty()){
+            System.out.println("\n  ── CUSTOMERS ─────────────────────────────────────────");
+            System.out.printf("  %-5s %-22s %-28s%n", "ID", "Name", "Email");
+            System.out.println("  ─────────────────────────────────────────────────────");
+
+            for(Customer customer : customers){
+                System.out.printf("  %-5d %-22s %-28s%n",customer.getCustomerId(),customer.getName(),customer.getEmail());
+            }
+        }
+        System.out.println("  No customers found.");
+    }
+
+
+
+    public void giveListAllBins() throws SQLException{
+        List<Bin> bins = warehouseService.giveListAllBins();
+
+        if(!bins.isEmpty()){
+            System.out.println("\n  ── BINS ──────────────────────────");
+            System.out.printf("  %-5s %-15s%n", "ID", "Location Code");
+            System.out.println("  ─────────────────────────────────");
+
+            for(Bin bin : bins){
+                System.out.printf("  %-5d %-15s%n", bin.getBinId(),bin.getLocationCode());
+            }
+        }
+        System.out.println("  No bins found.");
     }
 }

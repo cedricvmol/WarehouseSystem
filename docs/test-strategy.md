@@ -246,3 +246,8 @@ Voorstel: pas een agent maken wanneer een laag bestaat en herhaalwerk heeft.
   gemockte service blijven automatisch (bedrading, invoer, meldingen).
   Komt er een web-UI, dan E2E automatisch met Playwright for Java in de
   pipeline.
+- 2026-11-03 — Lege-toestand-scenario's (bv. "lijst is leeg → melding",
+  KAN-95 AC2/AC6) worden **alleen automatisch** gedekt (UI-test met
+  gemockte service die een lege lijst teruggeeft). Geen manuele case: die
+  zou een lege `warehouse.db` vereisen, wat botst met "manueel tegen
+  bestaande data".
