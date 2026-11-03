@@ -102,6 +102,17 @@ stories komen.
   `src/test/resources/manual-test-data.sql` (seed, `INSERT OR IGNORE`,
   veilig herhaalbaar, met controlequeries onderaan). Testcases steunen
   alleen op de seed en op wat ze zelf aanmaken.
+- **Herhaalbaar zonder opruimen.** Een case moet elke run opnieuw kunnen
+  draaien zonder `DELETE` vooraf:
+  - Vrij ID bepalen in de eerste stap:
+    `SELECT COALESCE(MAX(productId), 0) + 1 FROM products;` → `<newId>`.
+  - Duplicaat testen = eerst zelf aanmaken met `<newId>`, daarna opnieuw
+    met hetzelfde ID.
+  - Afhankelijke data (bv. stock) op een record dat de case zelf maakt,
+    zodat er gegarandeerd nog niets op staat.
+  - Seed alleen voor stabiele referentiedata (supplier 1, customer 1,
+    bins 1/2, "999 bestaat niet").
+  - De DB groeit bij elke run met een paar rijen; dat is aanvaard.
 
 #### Structuur in Testiny
 
@@ -251,3 +262,8 @@ Voorstel: pas een agent maken wanneer een laag bestaat en herhaalwerk heeft.
   gemockte service die een lege lijst teruggeeft). Geen manuele case: die
   zou een lege `warehouse.db` vereisen, wat botst met "manueel tegen
   bestaande data".
+- 2026-11-03 — Manuele cases zijn **herhaalbaar zonder opruimen**: vrije
+  ID's via `MAX + 1` (`<newId>`), duplicaten door eerst zelf aan te maken,
+  afhankelijke data op een zelf gemaakt record; seed alleen voor stabiele
+  referentiedata. Reden: een `DELETE` vóór elke run kost telkens tijd.
+  Toegepast op TC-25 … TC-34; dit is de basis voor de regressieset.

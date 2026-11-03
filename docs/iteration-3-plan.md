@@ -41,7 +41,7 @@ Given/When/Then acceptance criteria, Taak for technical work, label
 | KAN-103 | Bug | Duplicate ID on add product/supplier/customer/bin shows generic "storage layer" error — split from KAN-94 |
 
 ## Open to-dos
-- [ ] **KAN-103 — manual test cases in Testiny** (folder master data, title
+- [x] **KAN-103 — manual test cases in Testiny** (done 2026-11-03: TC-26..29 + TC-25, all passed in TR-2; coverage gaps TC-30..36 under KAN-67) (folder master data, title
   `[KAN-103] ...`, SQL check as last step): duplicate ID rejected for product,
   supplier, customer and bin; new ID still added. Automated service tests
   exist (`WarehouseServiceTest$DuplicateId`).
