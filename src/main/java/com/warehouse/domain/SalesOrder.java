@@ -13,6 +13,7 @@ public class SalesOrder {
 
     public SalesOrder(int salesOrderId, Customer customer, LocalDateTime orderDate, OrderStatus orderStatus, List<SalesOrderLineItem> salesOrderLineItems) {
         if(salesOrderLineItems == null || salesOrderLineItems.isEmpty()) throw new IllegalArgumentException("There are no line items in your sales order.");
+        if(customer == null) throw new IllegalArgumentException("You don't have a valid customer for this order");
         this.salesOrderId = salesOrderId;
         this.customer = customer;
         this.orderDate = orderDate;

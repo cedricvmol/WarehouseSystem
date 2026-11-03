@@ -189,7 +189,6 @@ class InputValidationTest {
     class OrderParty {
 
         @Test
-        @Disabled("KAN-87 AC6 - not implemented yet")
         @DisplayName("Purchase order without supplier is rejected")
         void purchaseOrderWithoutSupplier() {
             assertThrows(IllegalArgumentException.class,
@@ -197,7 +196,6 @@ class InputValidationTest {
         }
 
         @Test
-        @Disabled("KAN-87 AC6 - not implemented yet")
         @DisplayName("Sales order without customer is rejected")
         void salesOrderWithoutCustomer() {
             assertThrows(IllegalArgumentException.class,

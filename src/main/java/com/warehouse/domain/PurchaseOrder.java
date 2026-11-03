@@ -13,6 +13,7 @@ public class PurchaseOrder {
 
     public PurchaseOrder(int purchaseOrderId,Supplier supplier,LocalDateTime orderDate,OrderStatus orderStatus,List<PurchaseOrderLineItem> purchaseOrderLineItems){
         if(purchaseOrderLineItems == null || purchaseOrderLineItems.isEmpty()) throw new IllegalArgumentException("There are no line items in your purchase order.");
+        if(supplier == null) throw new IllegalArgumentException("You don't have a valid supplier for this order");
         this.purchaseOrderId = purchaseOrderId;
         this.supplier = supplier;
         this.orderDate = orderDate;
