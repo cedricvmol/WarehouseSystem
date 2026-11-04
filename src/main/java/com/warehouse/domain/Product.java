@@ -9,8 +9,8 @@ public class Product {
 
     public Product(int productId, String name, int threshold, Supplier supplier) {
         setProductId(productId);
-        this.name = name;
-        this.threshold = threshold;
+        setName(name);
+        setThreshold(threshold);
         this.supplier = supplier;
     }
 
@@ -35,5 +35,19 @@ public class Product {
             throw new IllegalArgumentException("Product ID must be at least 1");
         }
         this.productId = productId;
+    }
+
+    private void setThreshold(int threshold){
+        if(threshold < 0){
+            throw new IllegalArgumentException("Threshold must be at least 0");
+        }
+        this.threshold = threshold;
+    }
+
+    private void setName(String name){
+        if(name == null || name.isBlank()){
+            throw new IllegalArgumentException("Name can't be empty or null");
+        }
+        this.name = name;
     }
 }

@@ -8,8 +8,8 @@ public class Customer {
 
     public Customer(int customerId, String name, String email) {
         setCustomerId(customerId);
-        this.name = name;
-        this.email = email;
+        setName(name);
+        setEmail(email);
     }
 
     public int getCustomerId() {
@@ -29,5 +29,19 @@ public class Customer {
             throw new IllegalArgumentException("Customer ID must be at least 1");
         }
         this.customerId = customerId;
+    }
+
+    private void setName(String name){
+        if(name == null || name.isBlank()){
+            throw new IllegalArgumentException("Name can't be empty or null");
+        }
+        this.name = name;
+    }
+
+    private void setEmail(String email){
+        if(email == null || email.isBlank()){
+            throw new IllegalArgumentException("Email can't be empty or null");
+        }
+        this.email = email;
     }
 }

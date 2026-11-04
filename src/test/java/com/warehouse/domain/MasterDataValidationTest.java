@@ -37,7 +37,6 @@ class MasterDataValidationTest {
     class Threshold {
 
         @Test
-        @Disabled("KAN-102 D3 - not implemented yet")
         @DisplayName("Threshold -1 is rejected")
         void negativeRejected() {
             assertThrows(IllegalArgumentException.class, () -> new Product(1, "Widget", -1, supplier));
@@ -57,7 +56,6 @@ class MasterDataValidationTest {
         @ParameterizedTest(name = "product name [{0}] is rejected")
         @NullAndEmptySource
         @ValueSource(strings = {"   "})
-        @Disabled("KAN-102 D4 - not implemented yet")
         @DisplayName("Product without name is rejected")
         void productName(String name) {
             assertThrows(IllegalArgumentException.class, () -> new Product(1, name, 5, supplier));
@@ -66,7 +64,6 @@ class MasterDataValidationTest {
         @ParameterizedTest(name = "customer name [{0}] is rejected")
         @NullAndEmptySource
         @ValueSource(strings = {"   "})
-        @Disabled("KAN-102 D4 - not implemented yet")
         @DisplayName("Customer without name is rejected")
         void customerName(String name) {
             assertThrows(IllegalArgumentException.class, () -> new Customer(1, name, "acme@example.com"));
@@ -75,7 +72,6 @@ class MasterDataValidationTest {
         @ParameterizedTest(name = "customer e-mail [{0}] is rejected")
         @NullAndEmptySource
         @ValueSource(strings = {"   "})
-        @Disabled("KAN-102 D4 - not implemented yet")
         @DisplayName("Customer without e-mail is rejected")
         void customerEmail(String email) {
             assertThrows(IllegalArgumentException.class, () -> new Customer(1, "Acme", email));
@@ -84,7 +80,6 @@ class MasterDataValidationTest {
         @ParameterizedTest(name = "supplier name [{0}] is rejected")
         @NullAndEmptySource
         @ValueSource(strings = {"   "})
-        @Disabled("KAN-102 D4 - not implemented yet")
         @DisplayName("Supplier without name is rejected")
         void supplierName(String name) {
             assertThrows(IllegalArgumentException.class, () -> new Supplier(1, name, "parts@example.com"));
@@ -93,7 +88,6 @@ class MasterDataValidationTest {
         @ParameterizedTest(name = "supplier e-mail [{0}] is rejected")
         @NullAndEmptySource
         @ValueSource(strings = {"   "})
-        @Disabled("KAN-102 D4 - not implemented yet")
         @DisplayName("Supplier without e-mail is rejected")
         void supplierEmail(String email) {
             assertThrows(IllegalArgumentException.class, () -> new Supplier(1, "Parts Inc", email));
@@ -102,7 +96,6 @@ class MasterDataValidationTest {
         @ParameterizedTest(name = "bin location code [{0}] is rejected")
         @NullAndEmptySource
         @ValueSource(strings = {"   "})
-        @Disabled("KAN-102 D4 - not implemented yet")
         @DisplayName("Bin without location code is rejected")
         void binLocationCode(String locationCode) {
             assertThrows(IllegalArgumentException.class, () -> new Bin(1, locationCode));

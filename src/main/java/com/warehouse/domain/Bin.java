@@ -7,7 +7,7 @@ public class Bin {
 
     public Bin(int binId, String locationCode) {
         setBinId(binId);
-        this.locationCode = locationCode;
+        setLocationCode(locationCode);
     }
 
     public int getBinId() {
@@ -23,5 +23,12 @@ public class Bin {
             throw new IllegalArgumentException("Bin ID must be at least 1");
         }
         this.binId = binId;
+    }
+
+    private void setLocationCode(String locationCode){
+        if(locationCode == null || locationCode.isBlank()){
+            throw new IllegalArgumentException("Location code can't be empty or null");
+        }
+        this.locationCode = locationCode;
     }
 }
