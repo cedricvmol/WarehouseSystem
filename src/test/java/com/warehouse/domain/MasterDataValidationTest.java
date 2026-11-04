@@ -107,16 +107,14 @@ class MasterDataValidationTest {
     class EmailFormat {
 
         @ParameterizedTest(name = "e-mail \"{0}\" is rejected")
-        @ValueSource(strings = {"acme", "@example.com", "acme@"})
-        @Disabled("KAN-102 D5 - not implemented yet")
+        @ValueSource(strings = {"acme", "@example.com", "acme@", "acme@b@c"})
         @DisplayName("Customer with invalid e-mail is rejected")
         void customerInvalid(String email) {
             assertThrows(IllegalArgumentException.class, () -> new Customer(1, "Acme", email));
         }
 
         @ParameterizedTest(name = "e-mail \"{0}\" is rejected")
-        @ValueSource(strings = {"parts", "@example.com", "parts@"})
-        @Disabled("KAN-102 D5 - not implemented yet")
+        @ValueSource(strings = {"parts", "@example.com", "parts@", "parts@b@c"})
         @DisplayName("Supplier with invalid e-mail is rejected")
         void supplierInvalid(String email) {
             assertThrows(IllegalArgumentException.class, () -> new Supplier(1, "Parts Inc", email));

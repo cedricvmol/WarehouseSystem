@@ -42,6 +42,9 @@ public class Customer {
         if(email == null || email.isBlank()){
             throw new IllegalArgumentException("Email can't be empty or null");
         }
+        if(!email.matches("[^@]+@[^@]+")){
+            throw new IllegalArgumentException("Email is not valid.");
+        }
         this.email = email;
     }
 }
