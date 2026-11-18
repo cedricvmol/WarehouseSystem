@@ -159,5 +159,18 @@ public class WarehouseService {
         return binDao.findAll();
     }
 
+    public void adjustStock(int productId, int binId, int newQuantity) throws SQLException{
+        StockItem stockItem = stockItemDao.findByProductAndBin(productId,binId);
+        Product product = stockItem.getProduct();
+        Bin bin = stockItem.getBin();
+
+        if(newQuantity == 0){
+            stockItemDao.delete(productId,binId);
+        }else{
+            StockItem updatedStockItem = new StockItem(product,bin,newQuantity);
+            stockItemDao.update(updatedStockItem);
+        }
+    }
+
 
 }

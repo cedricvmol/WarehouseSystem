@@ -40,6 +40,7 @@ public class WarehouseUI {
             System.out.println("  STOCK");
             System.out.println("  [5]  Add stock item");
             System.out.println("  [6]  Check stock level");
+            System.out.println("  [15] Adjust stock");
             System.out.println("  ──────────────────────────────────");
             System.out.println("  PURCHASE ORDERS");
             System.out.println("  [7]  Create purchase order");
@@ -95,6 +96,9 @@ public class WarehouseUI {
                         break;
 
                     case "14" : giveListAllBins();
+                        break;
+
+                    case "15" : adjustStock();
                         break;
 
                     case "0" : return;
@@ -383,5 +387,24 @@ public class WarehouseUI {
             System.out.println("  No bins found.");
         }
 
+    }
+
+    public void adjustStock() throws SQLException{
+        System.out.println("\n  ── ADJUST STOCK ──────────────────");
+
+        System.out.print("  Product ID:     ");
+        int productId = scanner.nextInt();
+        scanner.nextLine();
+
+        System.out.print("  Bin ID:         ");
+        int binId = scanner.nextInt();
+        scanner.nextLine();
+
+        System.out.print("  New quantity:   ");
+        int newQuantity = scanner.nextInt();
+        scanner.nextLine();
+
+        warehouseService.adjustStock(productId,binId,newQuantity);
+        System.out.println("  ✔ Stock adjusted.");
     }
 }
