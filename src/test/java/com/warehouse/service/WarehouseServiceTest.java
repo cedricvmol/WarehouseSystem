@@ -344,6 +344,74 @@ class WarehouseServiceTest {
         }
     }
 
+    /**
+     * KAN-99: the new quantity replaces the old one (stock count), it is not a delta.
+     * Quantity 0 removes the stock row. Persistence is checked with SQL in
+     * storage/AdjustStockIntegrationTest.
+     */
+    @Nested
+    @Feature("Stock")
+    @Story("Adjust stock")
+    @DisplayName("Adjust stock (KAN-99)")
+    class AdjustStock {
+
+        private final StockItem widgetInA1 = new StockItem(widget, binA1, 10);
+
+        @ParameterizedTest(name = "10 -> {0}")
+        @ValueSource(ints = {8, 15, 1})
+        @Severity(SeverityLevel.CRITICAL)
+        @DisplayName("AC1/AC2 - new quantity replaces the old one for the same product and bin")
+        void newQuantityReplacesOld(int newQuantity) throws Exception {
+            when(stockItemDao.findByProductAndBin(1, 1)).thenReturn(widgetInA1);
+
+            service.adjustStock(1, 1, newQuantity);
+
+            ArgumentCaptor<StockItem> updated = ArgumentCaptor.forClass(StockItem.class);
+            verify(stockItemDao).update(updated.capture());
+            verify(stockItemDao, never()).delete(anyInt(), anyInt());
+            assertAll(
+                    () -> assertSame(widget, updated.getValue().getProduct()),
+                    () -> assertSame(binA1, updated.getValue().getBin()),
+                    () -> assertEquals(newQuantity, updated.getValue().getQuantity())
+            );
+        }
+
+        @Test
+        @Severity(SeverityLevel.CRITICAL)
+        @DisplayName("AC3 - quantity 0 removes the stock row, no update")
+        void zeroRemovesRow() throws Exception {
+            when(stockItemDao.findByProductAndBin(1, 1)).thenReturn(widgetInA1);
+
+            service.adjustStock(1, 1, 0);
+
+            verify(stockItemDao).delete(1, 1);
+            verify(stockItemDao, never()).update(any());
+        }
+
+        @ParameterizedTest(name = "new quantity {0}")
+        @ValueSource(ints = {-1, -10})
+        @DisplayName("AC4 - negative quantity is rejected and nothing changes")
+        void negativeRejected(int newQuantity) throws Exception {
+            when(stockItemDao.findByProductAndBin(1, 1)).thenReturn(widgetInA1);
+
+            assertThrows(IllegalArgumentException.class, () -> service.adjustStock(1, 1, newQuantity));
+            verify(stockItemDao, never()).update(any());
+            verify(stockItemDao, never()).delete(anyInt(), anyInt());
+        }
+
+        @Test
+        @DisplayName("AC5/AC6 - no stock row for product/bin is rejected and nothing changes")
+        void noStockRowRejected() throws Exception {
+            when(stockItemDao.findByProductAndBin(1, 2))
+                    .thenThrow(new IllegalArgumentException("No stockItem found with productId: 1 and binId: 2."));
+
+            assertThrows(IllegalArgumentException.class, () -> service.adjustStock(1, 2, 5));
+            verify(stockItemDao, never()).update(any());
+            verify(stockItemDao, never()).delete(anyInt(), anyInt());
+            verify(stockItemDao, never()).insert(any());
+        }
+    }
+
     @Nested
     @Feature("Purchase order")
     @DisplayName("Purchase orders")
