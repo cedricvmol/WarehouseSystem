@@ -12,6 +12,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class StockItemDao {
 
@@ -36,7 +37,7 @@ public class StockItemDao {
         }
     }
 
-    public StockItem findByProductAndBin(int productId,int binId) throws SQLException{
+    public Optional<StockItem> findByProductAndBin(int productId, int binId) throws SQLException{
         try(PreparedStatement ps = connection.prepareStatement("SELECT * FROM stockItems WHERE productId = ? AND binId = ?"))
         {
             ps.setInt(1,productId);
@@ -50,11 +51,11 @@ public class StockItemDao {
                     Bin bin = binDao.findById(binId).orElseThrow(()-> new IllegalStateException("Stock item (product "+productId+", bin "+binId+") refers to bin "+ binId+", which does not exist."));
 
                     StockItem stockItem = new StockItem(product,bin,quantity);
-                    return stockItem;
+                    return Optional.of(stockItem);
                 }
             }
         }
-        throw new IllegalArgumentException("No stockItem found with productId: " + productId + " and binId: " + binId + ".");
+        return Optional.empty();
     }
 
     public List<StockItem> findByProduct(int productId) throws SQLException{

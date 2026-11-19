@@ -41,6 +41,7 @@ public class WarehouseUI {
             System.out.println("  [5]  Add stock item");
             System.out.println("  [6]  Check stock level");
             System.out.println("  [15] Adjust stock");
+            System.out.println("  [16] Transfer stock");
             System.out.println("  ──────────────────────────────────");
             System.out.println("  PURCHASE ORDERS");
             System.out.println("  [7]  Create purchase order");
@@ -99,6 +100,9 @@ public class WarehouseUI {
                         break;
 
                     case "15" : adjustStock();
+                        break;
+
+                    case "16" : transferStock();
                         break;
 
                     case "0" : return;
@@ -406,5 +410,29 @@ public class WarehouseUI {
 
         warehouseService.adjustStock(productId,binId,newQuantity);
         System.out.println("  ✔ Stock adjusted.");
+    }
+
+    public void transferStock() throws SQLException{
+        System.out.println("\n  ── TRANSFER STOCK ────────────────");
+
+        System.out.print("  Product ID:     ");
+        int productId = scanner.nextInt();
+        scanner.nextLine();
+
+        System.out.print("  From bin ID:    ");
+        int binIdFrom = scanner.nextInt();
+        scanner.nextLine();
+
+        System.out.print("  To bin ID:      ");
+        int binIdTo = scanner.nextInt();
+        scanner.nextLine();
+
+        System.out.print("  Quantity:       ");
+        int quantity = scanner.nextInt();
+        scanner.nextLine();
+
+        warehouseService.transferStock(productId,binIdFrom,binIdTo,quantity);
+
+        System.out.println("  ✔ Stock transferred.");
     }
 }

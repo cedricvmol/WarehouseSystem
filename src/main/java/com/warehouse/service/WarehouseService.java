@@ -7,6 +7,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public class WarehouseService {
 
@@ -160,7 +161,7 @@ public class WarehouseService {
     }
 
     public void adjustStock(int productId, int binId, int newQuantity) throws SQLException{
-        StockItem stockItem = stockItemDao.findByProductAndBin(productId,binId);
+        StockItem stockItem = stockItemDao.findByProductAndBin(productId,binId).orElseThrow(()-> new IllegalArgumentException("No stockItem found with productId: " + productId + " and binId: " + binId + "."));
         Product product = stockItem.getProduct();
         Bin bin = stockItem.getBin();
 
@@ -170,7 +171,49 @@ public class WarehouseService {
             StockItem updatedStockItem = new StockItem(product,bin,newQuantity);
             stockItemDao.update(updatedStockItem);
         }
+
+
     }
 
+    public void transferStock(int productId,int binIdFrom, int binIdTo, int quantity) throws SQLException{
+        if(quantity <= 0){
+            throw new IllegalArgumentException("Quantity to be moved has to be > 0");
+        }
+        if(binIdFrom == binIdTo){
+            throw new IllegalArgumentException("Location from and location to cannot be the same.");
+        }
 
+        StockItem stockItemFrom = stockItemDao.findByProductAndBin(productId,binIdFrom).orElseThrow(()-> new IllegalArgumentException("No stockItem found with productId: " + productId + " and binId: " + binIdFrom + "."));
+
+        if(quantity> stockItemFrom.getQuantity()){
+            throw new IllegalArgumentException("Not enough stock in bin " + binIdFrom + ": requested "+ quantity + ", available "+ stockItemFrom.getQuantity() +".");
+        }
+
+        Bin binTo = binDao.findById(binIdTo).orElseThrow(()-> new IllegalArgumentException("No bin found with id: " + binIdTo + "."));
+
+        Optional<StockItem> stockItemToOpt = stockItemDao.findByProductAndBin(productId,binIdTo);
+
+        //happy path bron
+        Product product = stockItemFrom.getProduct();
+        Bin binFrom = stockItemFrom.getBin();
+        int updatedQuantityFrom = stockItemFrom.getQuantity() - quantity;
+
+        if(updatedQuantityFrom == 0){
+            stockItemDao.delete(productId,binIdFrom);
+        }else {
+            StockItem updatedStockItemFrom = new StockItem(product,binFrom,updatedQuantityFrom);
+            stockItemDao.update(updatedStockItemFrom);
+        }
+
+        //doel
+        if(stockItemToOpt.isEmpty()){
+            StockItem newStockItemTo = new StockItem(product,binTo,quantity);
+            stockItemDao.insert(newStockItemTo);
+        }else {
+            StockItem stockItemTo = stockItemToOpt.get();
+            int updatedQuantityTo = stockItemTo.getQuantity() + quantity;
+            StockItem updatedStockItemTo = new StockItem(product,binTo,updatedQuantityTo);
+            stockItemDao.update(updatedStockItemTo);
+        }
+    }
 }
