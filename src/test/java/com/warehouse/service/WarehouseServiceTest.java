@@ -33,6 +33,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -362,7 +363,7 @@ class WarehouseServiceTest {
         @Severity(SeverityLevel.CRITICAL)
         @DisplayName("AC1/AC2 - new quantity replaces the old one for the same product and bin")
         void newQuantityReplacesOld(int newQuantity) throws Exception {
-            when(stockItemDao.findByProductAndBin(1, 1)).thenReturn(widgetInA1);
+            when(stockItemDao.findByProductAndBin(1, 1)).thenReturn(Optional.of(widgetInA1));
 
             service.adjustStock(1, 1, newQuantity);
 
@@ -380,7 +381,7 @@ class WarehouseServiceTest {
         @Severity(SeverityLevel.CRITICAL)
         @DisplayName("AC3 - quantity 0 removes the stock row, no update")
         void zeroRemovesRow() throws Exception {
-            when(stockItemDao.findByProductAndBin(1, 1)).thenReturn(widgetInA1);
+            when(stockItemDao.findByProductAndBin(1, 1)).thenReturn(Optional.of(widgetInA1));
 
             service.adjustStock(1, 1, 0);
 
@@ -392,7 +393,7 @@ class WarehouseServiceTest {
         @ValueSource(ints = {-1, -10})
         @DisplayName("AC4 - negative quantity is rejected and nothing changes")
         void negativeRejected(int newQuantity) throws Exception {
-            when(stockItemDao.findByProductAndBin(1, 1)).thenReturn(widgetInA1);
+            when(stockItemDao.findByProductAndBin(1, 1)).thenReturn(Optional.of(widgetInA1));
 
             assertThrows(IllegalArgumentException.class, () -> service.adjustStock(1, 1, newQuantity));
             verify(stockItemDao, never()).update(any());
@@ -402,13 +403,160 @@ class WarehouseServiceTest {
         @Test
         @DisplayName("AC5/AC6 - no stock row for product/bin is rejected and nothing changes")
         void noStockRowRejected() throws Exception {
-            when(stockItemDao.findByProductAndBin(1, 2))
-                    .thenThrow(new IllegalArgumentException("No stockItem found with productId: 1 and binId: 2."));
+            when(stockItemDao.findByProductAndBin(1, 2)).thenReturn(Optional.empty());
 
             assertThrows(IllegalArgumentException.class, () -> service.adjustStock(1, 2, 5));
             verify(stockItemDao, never()).update(any());
             verify(stockItemDao, never()).delete(anyInt(), anyInt());
             verify(stockItemDao, never()).insert(any());
+        }
+    }
+
+    /**
+     * KAN-98: move a quantity of a product from bin A1 (id 1) to bin A2 (id 2).
+     * Here: which writes the service sends to the DAO. The resulting rows and
+     * AC4 (total unchanged) are checked with SQL in storage/TransferStockIntegrationTest.
+     */
+    @Nested
+    @Feature("Stock")
+    @Story("Transfer stock")
+    @DisplayName("Transfer stock (KAN-98)")
+    class TransferStock {
+
+        private final Bin binA2 = new Bin(2, "A2");
+        private final StockItem widgetInA1 = new StockItem(widget, binA1, 10);
+        private final StockItem widgetInA2 = new StockItem(widget, binA2, 2);
+
+        private void givenSource() throws Exception {
+            when(stockItemDao.findByProductAndBin(1, 1)).thenReturn(Optional.of(widgetInA1));
+        }
+
+        private void givenTarget(Optional<StockItem> targetRow) throws Exception {
+            when(binDao.findById(2)).thenReturn(Optional.of(binA2));
+            when(stockItemDao.findByProductAndBin(1, 2)).thenReturn(targetRow);
+        }
+
+        private void assertNoWrites() throws Exception {
+            verify(stockItemDao, never()).update(any());
+            verify(stockItemDao, never()).insert(any());
+            verify(stockItemDao, never()).delete(anyInt(), anyInt());
+        }
+
+        private void assertRow(StockItem row, Bin expectedBin, int expectedQuantity) {
+            assertAll(
+                    () -> assertSame(widget, row.getProduct()),
+                    () -> assertEquals(expectedBin.getBinId(), row.getBin().getBinId()),
+                    () -> assertEquals(expectedQuantity, row.getQuantity())
+            );
+        }
+
+        @Test
+        @Severity(SeverityLevel.CRITICAL)
+        @DisplayName("AC1 - A1=10, A2=2, move 4: both rows updated to 6, nothing inserted or deleted")
+        void bothBinsHoldProduct() throws Exception {
+            givenSource();
+            givenTarget(Optional.of(widgetInA2));
+
+            service.transferStock(1, 1, 2, 4);
+
+            ArgumentCaptor<StockItem> updated = ArgumentCaptor.forClass(StockItem.class);
+            verify(stockItemDao, times(2)).update(updated.capture());
+            verify(stockItemDao, never()).insert(any());
+            verify(stockItemDao, never()).delete(anyInt(), anyInt());
+            assertRow(updated.getAllValues().get(0), binA1, 6);
+            assertRow(updated.getAllValues().get(1), binA2, 6);
+        }
+
+        @Test
+        @Severity(SeverityLevel.CRITICAL)
+        @DisplayName("AC2 - target bin does not hold the product: source updated, new row inserted in target")
+        void targetEmptyInsertsRow() throws Exception {
+            givenSource();
+            givenTarget(Optional.empty());
+
+            service.transferStock(1, 1, 2, 4);
+
+            ArgumentCaptor<StockItem> updated = ArgumentCaptor.forClass(StockItem.class);
+            ArgumentCaptor<StockItem> inserted = ArgumentCaptor.forClass(StockItem.class);
+            verify(stockItemDao).update(updated.capture());
+            verify(stockItemDao).insert(inserted.capture());
+            verify(stockItemDao, never()).delete(anyInt(), anyInt());
+            assertRow(updated.getValue(), binA1, 6);
+            assertRow(inserted.getValue(), binA2, 4);
+        }
+
+        @Test
+        @Severity(SeverityLevel.CRITICAL)
+        @DisplayName("AC3 - move all 10: source row deleted, target updated to 12")
+        void moveAllDeletesSource() throws Exception {
+            givenSource();
+            givenTarget(Optional.of(widgetInA2));
+
+            service.transferStock(1, 1, 2, 10);
+
+            ArgumentCaptor<StockItem> updated = ArgumentCaptor.forClass(StockItem.class);
+            verify(stockItemDao).delete(1, 1);
+            verify(stockItemDao).update(updated.capture());
+            verify(stockItemDao, never()).insert(any());
+            assertRow(updated.getValue(), binA2, 12);
+        }
+
+        @Test
+        @DisplayName("AC2+AC3 - move all 10 to a bin without the product: source deleted, target inserted with 10")
+        void moveAllToEmptyBin() throws Exception {
+            givenSource();
+            givenTarget(Optional.empty());
+
+            service.transferStock(1, 1, 2, 10);
+
+            ArgumentCaptor<StockItem> inserted = ArgumentCaptor.forClass(StockItem.class);
+            verify(stockItemDao).delete(1, 1);
+            verify(stockItemDao).insert(inserted.capture());
+            verify(stockItemDao, never()).update(any());
+            assertRow(inserted.getValue(), binA2, 10);
+        }
+
+        @Test
+        @DisplayName("AC5 - move 11 while A1 holds 10: rejected, nothing written")
+        void moreThanAvailableRejected() throws Exception {
+            givenSource();
+
+            assertThrows(IllegalArgumentException.class, () -> service.transferStock(1, 1, 2, 11));
+            assertNoWrites();
+        }
+
+        @ParameterizedTest(name = "quantity {0}")
+        @ValueSource(ints = {0, -1})
+        @DisplayName("AC6 - quantity 0 or less: rejected, nothing written")
+        void nonPositiveQuantityRejected(int quantity) throws Exception {
+            assertThrows(IllegalArgumentException.class, () -> service.transferStock(1, 1, 2, quantity));
+            assertNoWrites();
+        }
+
+        @Test
+        @DisplayName("AC7 - source and target are the same bin: rejected, nothing written")
+        void sameBinRejected() throws Exception {
+            assertThrows(IllegalArgumentException.class, () -> service.transferStock(1, 1, 1, 4));
+            assertNoWrites();
+        }
+
+        @Test
+        @DisplayName("AC8 - product not in source bin (or unknown product/source bin): rejected, nothing written")
+        void noSourceRowRejected() throws Exception {
+            when(stockItemDao.findByProductAndBin(1, 1)).thenReturn(Optional.empty());
+
+            assertThrows(IllegalArgumentException.class, () -> service.transferStock(1, 1, 2, 4));
+            assertNoWrites();
+        }
+
+        @Test
+        @DisplayName("AC8 - target bin does not exist: rejected, nothing written")
+        void unknownTargetBinRejected() throws Exception {
+            givenSource();
+            when(binDao.findById(99)).thenReturn(Optional.empty());
+
+            assertThrows(IllegalArgumentException.class, () -> service.transferStock(1, 1, 99, 4));
+            assertNoWrites();
         }
     }
 
