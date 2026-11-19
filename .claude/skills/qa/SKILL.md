@@ -149,10 +149,15 @@ Decided — see Decisions log:
   drafted by `qa-manual`
 - Managing test cases and runs in Testiny (always confirm before writing)
 
+- Bugs found while testing: **immediately** send the student a bug draft in
+  chat (summary, description, repro steps, actual result, expected result,
+  priority, label). Verify the repro yourself first — subagent findings can
+  be overstated. Log it in Jira (Bug, KAN, parent epic) only after the
+  student's OK on the draft.
+
 Not yet decided — confirm with the user before treating any as standard:
 - Test strategy per iteration (what to test at which level)
 - BDD scenarios (Cucumber/Gherkin)
-- Logging bugs found during testing as Jira issues
 
 ## Decisions log
 
@@ -213,4 +218,9 @@ Record confirmed decisions about **this skill's role and behaviour** here
 - 2026-11-19 — Manual cases: compute expected values in a state table
   before writing the steps (after an arithmetic slip in TC-46).
 - 2026-11-19 — Still open, don't treat as standard: test strategy per
-  iteration, BDD/Gherkin, logging bugs in Jira.
+  iteration, BDD/Gherkin.
+- 2026-11-19 — Decided: on every bug or UX issue found (by the lead or a
+  subagent), send the student a bug draft right away — summary, repro
+  steps, actual and expected result — instead of listing it as a "finding".
+  Jira only after the student's OK. Reason: the student wants findings in
+  the format they use at work; first applied to KAN-104.
