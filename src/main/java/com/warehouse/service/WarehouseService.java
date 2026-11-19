@@ -3,6 +3,7 @@ package com.warehouse.service;
 import com.warehouse.domain.*;
 import com.warehouse.storage.*;
 
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,8 +19,9 @@ public class WarehouseService {
     private StockItemDao stockItemDao;
     private PurchaseOrderDao purchaseOrderDao;
     private SalesOrderDao salesOrderDao;
+    private Connection connection;
 
-    public WarehouseService(ProductDao productDao,BinDao binDao,CustomerDao customerDao,SupplierDao supplierDao,StockItemDao stockItemDao,PurchaseOrderDao purchaseOrderDao, SalesOrderDao salesOrderDao){
+    public WarehouseService(Connection connection,ProductDao productDao,BinDao binDao,CustomerDao customerDao,SupplierDao supplierDao,StockItemDao stockItemDao,PurchaseOrderDao purchaseOrderDao, SalesOrderDao salesOrderDao){
         this.productDao = productDao;
         this.binDao = binDao;
         this.customerDao = customerDao;
@@ -27,6 +29,7 @@ public class WarehouseService {
         this.stockItemDao = stockItemDao;
         this.purchaseOrderDao = purchaseOrderDao;
         this.salesOrderDao = salesOrderDao;
+        this.connection = connection;
     }
 
     public void addProduct(int productId,String name, int threshold,int supplierId) throws SQLException {
@@ -190,30 +193,39 @@ public class WarehouseService {
         }
 
         Bin binTo = binDao.findById(binIdTo).orElseThrow(()-> new IllegalArgumentException("No bin found with id: " + binIdTo + "."));
-
         Optional<StockItem> stockItemToOpt = stockItemDao.findByProductAndBin(productId,binIdTo);
 
-        //happy path bron
-        Product product = stockItemFrom.getProduct();
-        Bin binFrom = stockItemFrom.getBin();
-        int updatedQuantityFrom = stockItemFrom.getQuantity() - quantity;
+        connection.setAutoCommit(false);
 
-        if(updatedQuantityFrom == 0){
-            stockItemDao.delete(productId,binIdFrom);
-        }else {
-            StockItem updatedStockItemFrom = new StockItem(product,binFrom,updatedQuantityFrom);
-            stockItemDao.update(updatedStockItemFrom);
-        }
+        try{
+            //happy path bron
+            Product product = stockItemFrom.getProduct();
+            Bin binFrom = stockItemFrom.getBin();
+            int updatedQuantityFrom = stockItemFrom.getQuantity() - quantity;
 
-        //doel
-        if(stockItemToOpt.isEmpty()){
-            StockItem newStockItemTo = new StockItem(product,binTo,quantity);
-            stockItemDao.insert(newStockItemTo);
-        }else {
-            StockItem stockItemTo = stockItemToOpt.get();
-            int updatedQuantityTo = stockItemTo.getQuantity() + quantity;
-            StockItem updatedStockItemTo = new StockItem(product,binTo,updatedQuantityTo);
-            stockItemDao.update(updatedStockItemTo);
+            if(updatedQuantityFrom == 0){
+                stockItemDao.delete(productId,binIdFrom);
+            }else {
+                StockItem updatedStockItemFrom = new StockItem(product,binFrom,updatedQuantityFrom);
+                stockItemDao.update(updatedStockItemFrom);
+            }
+
+            //doel
+            if(stockItemToOpt.isEmpty()){
+                StockItem newStockItemTo = new StockItem(product,binTo,quantity);
+                stockItemDao.insert(newStockItemTo);
+            }else {
+                StockItem stockItemTo = stockItemToOpt.get();
+                int updatedQuantityTo = stockItemTo.getQuantity() + quantity;
+                StockItem updatedStockItemTo = new StockItem(product,binTo,updatedQuantityTo);
+                stockItemDao.update(updatedStockItemTo);
+            }
+            connection.commit();
+        }catch (SQLException | RuntimeException e){
+            connection.rollback();
+            throw e;
+        } finally {
+            connection.setAutoCommit(true);
         }
     }
 }

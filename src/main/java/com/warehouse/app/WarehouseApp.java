@@ -24,7 +24,7 @@ public class WarehouseApp {
         PurchaseOrderDao purchaseOrderDao = new PurchaseOrderDao(connection,supplierDao,productDao);
         SalesOrderDao salesOrderDao = new SalesOrderDao(connection,productDao,customerDao);
 
-        WarehouseService warehouseService = new WarehouseService(productDao,binDao,customerDao,supplierDao,stockItemDao,purchaseOrderDao,salesOrderDao);
+        WarehouseService warehouseService = new WarehouseService(connection,productDao,binDao,customerDao,supplierDao,stockItemDao,purchaseOrderDao,salesOrderDao);
 
         WarehouseUI warehouseUI = new WarehouseUI(warehouseService);
         warehouseUI.run();
