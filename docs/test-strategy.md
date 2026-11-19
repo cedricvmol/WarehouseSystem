@@ -113,11 +113,11 @@ stories komen.
   - Seed alleen voor stabiele referentiedata (supplier 1, customer 1,
     bins 1/2, "999 bestaat niet").
   - De DB groeit bij elke run met een paar rijen; dat is aanvaard.
-- **Wat manueel, wat automatisch.** Validatieregels (grenswaarden,
-  ongeldige invoer) worden gedekt door unit-tests — geen manuele case,
-  tenzij de CLI er iets eigens mee doet. Manueel test flows end-to-end en
-  wat de gebruiker ziet (bv. order aanmaken, stock toevoegen en niveau
-  checken). Regels die via de CLI onbereikbaar zijn (bv. order zonder
+- **Wat manueel, wat automatisch.** Elke CLI-flow en elk acceptatiecriterium
+  (ook foutpaden) krijgt een manuele case: melding, app blijft draaien, DB
+  na afloop. Grenswaarden-varianten van een regel (−1, −5, 0, 1 …) worden
+  gedekt door unit-tests; manueel één representatieve waarde per AC
+  (zie Beslist 2026-11-19). Regels die via de CLI onbereikbaar zijn (bv. order zonder
   partij) zijn sowieso alleen automatisch.
 
 #### Structuur in Testiny
@@ -279,3 +279,18 @@ Voorstel: pas een agent maken wanneer een laag bestaat en herhaalwerk heeft.
   "stock -1 geweigerd" vindt niets wat de unit-test niet al vindt en maakt
   het testwerk onnodig zwaar. Toegepast op KAN-87 (geen nieuwe manuele
   cases).
+- 2026-11-19 — **Elke CLI-flow (menu-optie) heeft minstens één manuele
+  case**, gemaakt en uitgevoerd **per ticket** vóór het naar Gereed gaat.
+  Op het einde van de iteratie is de manuele run een **regressierun** van
+  die cases, niet het eerste moment waarop een flow manueel getest wordt.
+  Foutpaden die al automatisch gedekt zijn, krijgen geen eigen manuele case
+  (zie 2026-11-04). Reden: zo werkt de student ook als tester; een ticket
+  is pas klaar als de echte flow doorlopen is.
+- 2026-11-19 — **Verduidelijking van 2026-11-04 en 2026-11-19:** elke
+  acceptatiecriterium krijgt **een eigen manuele case**, ook de foutpaden
+  (zoals 2026-11-02 al zei). Een manuele foutcase toetst wat alleen de echte
+  CLI laat zien: een duidelijke melding (geen storage-fout of stacktrace),
+  de app blijft draaien, de DB is ongewijzigd. "Alleen automatisch" geldt
+  enkel voor **grenswaarden-varianten** van een regel (bv. −1, −5, 0, 1 als
+  aparte waarden): manueel volstaat één representatieve waarde per AC.
+  Reden: consistentie met de cases van iteratie 1–2 (TC-4, TC-26 … TC-36).
