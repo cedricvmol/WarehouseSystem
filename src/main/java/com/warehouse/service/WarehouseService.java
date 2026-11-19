@@ -177,7 +177,7 @@ public class WarehouseService {
 
     public void transferStock(int productId,int binIdFrom, int binIdTo, int quantity) throws SQLException{
         if(quantity <= 0){
-            throw new IllegalArgumentException("Quantity to be moved has to be > 0");
+            throw new IllegalArgumentException("Quantity to be moved has to be > 0.");
         }
         if(binIdFrom == binIdTo){
             throw new IllegalArgumentException("Location from and location to cannot be the same.");
