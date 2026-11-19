@@ -44,7 +44,7 @@ class AdjustStockIntegrationTest {
         BinDao binDao = new BinDao(db.connection);
         CustomerDao customerDao = new CustomerDao(db.connection);
         StockItemDao stockItemDao = new StockItemDao(db.connection, binDao, productDao);
-        service = new WarehouseService(productDao, binDao, customerDao, supplierDao, stockItemDao,
+        service = new WarehouseService(db.connection, productDao, binDao, customerDao, supplierDao, stockItemDao,
                 new PurchaseOrderDao(db.connection, supplierDao, productDao),
                 new SalesOrderDao(db.connection, productDao, customerDao));
 

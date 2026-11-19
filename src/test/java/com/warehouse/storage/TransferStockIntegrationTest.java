@@ -6,18 +6,25 @@ import com.warehouse.domain.Supplier;
 import com.warehouse.service.WarehouseService;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
+import io.qameta.allure.Issue;
 import io.qameta.allure.Severity;
 import io.qameta.allure.SeverityLevel;
 import io.qameta.allure.Story;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -49,7 +56,7 @@ class TransferStockIntegrationTest {
         BinDao binDao = new BinDao(db.connection);
         CustomerDao customerDao = new CustomerDao(db.connection);
         StockItemDao stockItemDao = new StockItemDao(db.connection, binDao, productDao);
-        service = new WarehouseService(productDao, binDao, customerDao, supplierDao, stockItemDao,
+        service = new WarehouseService(db.connection, productDao, binDao, customerDao, supplierDao, stockItemDao,
                 new PurchaseOrderDao(db.connection, supplierDao, productDao),
                 new SalesOrderDao(db.connection, productDao, customerDao));
 
@@ -204,5 +211,130 @@ class TransferStockIntegrationTest {
         assertThrows(IllegalArgumentException.class, () -> service.transferStock(999, 1, 2, 4));
 
         assertUnchanged();
+    }
+
+    /**
+     * KAN-101: source and target write are one transaction.
+     * An unknown target bin cannot be used for fault injection (the service rejects it
+     * before the transaction starts), so a test-only trigger makes only the write on the
+     * target bin fail: the write on the source bin (bin 1) has already succeeded by then.
+     */
+    @Nested
+    @Feature("Data consistency")
+    @Issue("KAN-101")
+    @DisplayName("Rollback (KAN-101)")
+    class Rollback {
+
+        private static final String TRIGGER = "fail_target_write";
+
+        /** Makes every {@code operation} (INSERT/UPDATE) on stockItems for {@code binId} fail. */
+        private void failWritesOnBin(String operation, int binId) throws Exception {
+            db.execute("CREATE TRIGGER " + TRIGGER + " BEFORE " + operation + " ON stockItems"
+                    + " WHEN NEW.binId = " + binId
+                    + " BEGIN SELECT RAISE(ABORT, 'test: target write blocked'); END");
+        }
+
+        private void assertFailureFromTrigger(SQLException thrown) {
+            assertTrue(thrown.getMessage().contains("test: target write blocked"),
+                    "expected the trigger's exception, got: " + thrown.getMessage());
+        }
+
+        @Test
+        @Severity(SeverityLevel.CRITICAL)
+        @DisplayName("C2 - insert into bin 3 fails after A was decreased: A still 10, no P/3 row, exception reaches caller")
+        void failingTargetInsertRollsBackSourceUpdate() throws Exception {
+            failWritesOnBin("INSERT", 3);
+
+            SQLException thrown = assertThrows(SQLException.class, () -> service.transferStock(1, 1, 3, 4));
+
+            assertFailureFromTrigger(thrown);
+            assertAll(
+                    () -> assertEquals(10, quantity(1, 1)),
+                    () -> assertEquals(0, rows(1, 3)),
+                    () -> assertEquals(TOTAL, totalOfProduct1())
+            );
+        }
+
+        @Test
+        @Severity(SeverityLevel.CRITICAL)
+        @DisplayName("C2 - update of B (holds 2) fails after A was decreased: A still 10, B still 2")
+        void failingTargetUpdateRollsBackSourceUpdate() throws Exception {
+            failWritesOnBin("UPDATE", 2);
+
+            SQLException thrown = assertThrows(SQLException.class, () -> service.transferStock(1, 1, 2, 4));
+
+            assertFailureFromTrigger(thrown);
+            assertUnchanged();
+        }
+
+        @Test
+        @Severity(SeverityLevel.CRITICAL)
+        @DisplayName("C2 - move all 10 (P/A deleted), insert into bin 3 fails: P/A row is back with 10")
+        void failingTargetInsertRollsBackSourceDelete() throws Exception {
+            failWritesOnBin("INSERT", 3);
+
+            SQLException thrown = assertThrows(SQLException.class, () -> service.transferStock(1, 1, 3, 10));
+
+            assertFailureFromTrigger(thrown);
+            assertAll(
+                    () -> assertEquals(1, rows(1, 1)),
+                    () -> assertEquals(10, quantity(1, 1)),
+                    () -> assertEquals(0, rows(1, 3))
+            );
+        }
+
+        @Test
+        @DisplayName("C3 - after a rolled-back transfer auto-commit is on again")
+        void autoCommitRestoredAfterRollback() throws Exception {
+            failWritesOnBin("INSERT", 3);
+            assertThrows(SQLException.class, () -> service.transferStock(1, 1, 3, 4));
+
+            assertTrue(db.connection.getAutoCommit());
+        }
+
+        @Test
+        @DisplayName("C3 - after a rolled-back transfer the connection is usable: next transfer is committed")
+        void nextTransferCommittedAfterRollback() throws Exception {
+            failWritesOnBin("INSERT", 3);
+            assertThrows(SQLException.class, () -> service.transferStock(1, 1, 3, 4));
+            db.execute("DROP TRIGGER " + TRIGGER);
+
+            service.transferStock(1, 1, 3, 4);
+
+            // Read through a second connection: only committed data is visible there.
+            try (Connection other = new DatabaseManager(db.url).getConnection()) {
+                assertAll(
+                        () -> assertEquals(6, quantityVia(other, 1, 1)),
+                        () -> assertEquals(4, quantityVia(other, 1, 3))
+                );
+            }
+        }
+
+        @Test
+        @Severity(SeverityLevel.CRITICAL)
+        @DisplayName("C1+C3 - successful transfer is committed (visible on a second connection), auto-commit on")
+        void successfulTransferCommitted() throws Exception {
+            service.transferStock(1, 1, 2, 4);
+
+            assertTrue(db.connection.getAutoCommit());
+            try (Connection other = new DatabaseManager(db.url).getConnection()) {
+                assertAll(
+                        () -> assertEquals(6, quantityVia(other, 1, 1)),
+                        () -> assertEquals(6, quantityVia(other, 1, 2))
+                );
+            }
+        }
+
+        private int quantityVia(Connection other, int productId, int binId) throws SQLException {
+            try (PreparedStatement ps = other.prepareStatement(
+                    "SELECT quantity FROM stockItems WHERE productId = ? AND binId = ?")) {
+                ps.setInt(1, productId);
+                ps.setInt(2, binId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    assertTrue(rs.next(), "no row for product " + productId + ", bin " + binId);
+                    return rs.getInt(1);
+                }
+            }
+        }
     }
 }

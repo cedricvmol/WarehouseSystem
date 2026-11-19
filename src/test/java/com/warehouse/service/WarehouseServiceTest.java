@@ -18,9 +18,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -32,9 +35,13 @@ import java.util.stream.Collectors;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 /**
@@ -49,6 +56,7 @@ import static org.mockito.Mockito.when;
 @DisplayName("WarehouseService")
 class WarehouseServiceTest {
 
+    @Mock private Connection connection;
     @Mock private ProductDao productDao;
     @Mock private BinDao binDao;
     @Mock private CustomerDao customerDao;
@@ -67,7 +75,7 @@ class WarehouseServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new WarehouseService(productDao, binDao, customerDao, supplierDao,
+        service = new WarehouseService(connection, productDao, binDao, customerDao, supplierDao,
                 stockItemDao, purchaseOrderDao, salesOrderDao);
     }
 
@@ -557,6 +565,112 @@ class WarehouseServiceTest {
 
             assertThrows(IllegalArgumentException.class, () -> service.transferStock(1, 1, 99, 4));
             assertNoWrites();
+        }
+    }
+
+    /**
+     * KAN-101 (no G/W/T in Jira; criteria derived from the ticket text):
+     * C1 commit on success, C2 rollback on any exception and rethrow the original,
+     * C3 auto-commit restored afterwards.
+     * Here: the order of the calls on the (mocked) connection around the DAO writes.
+     * That the rows really come back on SQLite is checked in
+     * storage/TransferStockIntegrationTest (Rollback).
+     */
+    @Nested
+    @Feature("Data consistency")
+    @Story("Transfer stock")
+    @Issue("KAN-101")
+    @DisplayName("Transfer stock transaction (KAN-101)")
+    class TransferStockTransaction {
+
+        private final Bin binA2 = new Bin(2, "A2");
+        private final StockItem widgetInA1 = new StockItem(widget, binA1, 10);
+        private final StockItem widgetInA2 = new StockItem(widget, binA2, 2);
+
+        /** A1 holds 10; A2 exists and holds {@code targetRow}. */
+        private void givenSourceAndTarget(Optional<StockItem> targetRow) throws Exception {
+            when(stockItemDao.findByProductAndBin(1, 1)).thenReturn(Optional.of(widgetInA1));
+            when(binDao.findById(2)).thenReturn(Optional.of(binA2));
+            when(stockItemDao.findByProductAndBin(1, 2)).thenReturn(targetRow);
+        }
+
+        @Test
+        @Severity(SeverityLevel.CRITICAL)
+        @DisplayName("C1+C3 - successful transfer: auto-commit off, both writes, commit, auto-commit on; no rollback")
+        void successCommits() throws Exception {
+            givenSourceAndTarget(Optional.of(widgetInA2));
+
+            service.transferStock(1, 1, 2, 4);
+
+            InOrder inOrder = inOrder(connection, stockItemDao);
+            inOrder.verify(connection).setAutoCommit(false);
+            inOrder.verify(stockItemDao, times(2)).update(any());
+            inOrder.verify(connection).commit();
+            inOrder.verify(connection).setAutoCommit(true);
+            verify(connection, never()).rollback();
+        }
+
+        @Test
+        @Severity(SeverityLevel.CRITICAL)
+        @DisplayName("C2+C3 - target insert throws SQLException: rollback, no commit, same exception rethrown, auto-commit on")
+        void sqlExceptionOnTargetWriteRollsBack() throws Exception {
+            givenSourceAndTarget(Optional.empty());
+            SQLException failure = new SQLException("target write failed");
+            doThrow(failure).when(stockItemDao).insert(any());
+
+            SQLException thrown = assertThrows(SQLException.class, () -> service.transferStock(1, 1, 2, 4));
+
+            assertSame(failure, thrown);
+            InOrder inOrder = inOrder(connection, stockItemDao);
+            inOrder.verify(connection).setAutoCommit(false);
+            inOrder.verify(stockItemDao).update(any());
+            inOrder.verify(stockItemDao).insert(any());
+            inOrder.verify(connection).rollback();
+            inOrder.verify(connection).setAutoCommit(true);
+            verify(connection, never()).commit();
+        }
+
+        @Test
+        @DisplayName("C2+C3 - target update throws RuntimeException: rollback, no commit, same exception rethrown, auto-commit on")
+        void runtimeExceptionOnTargetWriteRollsBack() throws Exception {
+            givenSourceAndTarget(Optional.of(widgetInA2));
+            IllegalStateException failure = new IllegalStateException("target write failed");
+            doNothing().doThrow(failure).when(stockItemDao).update(any()); // 1st (source) ok, 2nd (target) fails
+
+            IllegalStateException thrown = assertThrows(IllegalStateException.class,
+                    () -> service.transferStock(1, 1, 2, 4));
+
+            assertSame(failure, thrown);
+            InOrder inOrder = inOrder(connection, stockItemDao);
+            inOrder.verify(connection).setAutoCommit(false);
+            inOrder.verify(stockItemDao, times(2)).update(any());
+            inOrder.verify(connection).rollback();
+            inOrder.verify(connection).setAutoCommit(true);
+            verify(connection, never()).commit();
+        }
+
+        @Test
+        @DisplayName("Validation first - quantity 0: rejected before the transaction, connection untouched")
+        void zeroQuantityDoesNotTouchConnection() {
+            assertThrows(IllegalArgumentException.class, () -> service.transferStock(1, 1, 2, 0));
+            verifyNoInteractions(connection);
+        }
+
+        @Test
+        @DisplayName("Validation first - same source and target bin: rejected before the transaction, connection untouched")
+        void sameBinDoesNotTouchConnection() {
+            assertThrows(IllegalArgumentException.class, () -> service.transferStock(1, 1, 1, 4));
+            verifyNoInteractions(connection);
+        }
+
+        @Test
+        @DisplayName("Validation first - unknown target bin (last check): rejected before the transaction, connection untouched")
+        void unknownTargetBinDoesNotTouchConnection() throws Exception {
+            when(stockItemDao.findByProductAndBin(1, 1)).thenReturn(Optional.of(widgetInA1));
+            when(binDao.findById(99)).thenReturn(Optional.empty());
+
+            assertThrows(IllegalArgumentException.class, () -> service.transferStock(1, 1, 99, 4));
+            verifyNoInteractions(connection);
         }
     }
 
